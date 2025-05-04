@@ -165,6 +165,13 @@ function writeRepTableDynamic(sheet, stats) {
   disp.slice(0, rowsToUse).forEach((r, i) => {
     const row = START + i;
     
+    // Safely break apart any merged cells in this row first
+    try {
+      sheet.getRange(`B${row}:O${row}`).breakApart();
+    } catch (e) {
+      console.log('No merged cells to break apart in row ' + row);
+    }
+    
     // Set values
     sheet.getRange(`B${row}`).setValue(r.rep).setHorizontalAlignment('left');
     sheet.getRange(`F${row}:G${row}`).merge().setValue(r.count).setHorizontalAlignment('center');
@@ -193,6 +200,14 @@ function writeRepTableDynamic(sheet, stats) {
 
 // ─── WRITE LOW ALERTS DYNAMIC ───
 function formatLowRatingTitle(sheet, titleRow) {
+  // Unmerge any existing merged cells in this row first
+  try {
+    sheet.getRange(`B${titleRow}:H${titleRow}`).breakApart();
+  } catch (e) {
+    console.log('No merged cells to break apart');
+  }
+  
+  // Now set the title
   sheet.getRange(`B${titleRow}:H${titleRow}`)
     .merge()
     .setValue("Low Rating Alerts")
@@ -202,6 +217,13 @@ function formatLowRatingTitle(sheet, titleRow) {
 }
 
 function formatLowAlertHeader(sheet, headerRow) {
+  // Unmerge any existing merged cells in this row first
+  try {
+    sheet.getRange(`B${headerRow}:O${headerRow}`).breakApart();
+  } catch (e) {
+    console.log('No merged cells to break apart');
+  }
+  
   // Format the header row
   sheet.getRange(`B${headerRow}:O${headerRow}`)
     .setBackground('#fee7e8')
@@ -210,7 +232,7 @@ function formatLowAlertHeader(sheet, headerRow) {
     .setFontSize(10)
     .setFontColor('#c0392b');
   
-  // Ensure proper merges with right alignment
+  // Now merge cells
   sheet.getRange(`B${headerRow}:C${headerRow}`).merge().setValue('Time').setHorizontalAlignment('left');
   sheet.getRange(`D${headerRow}:F${headerRow}`).merge().setValue('Customer').setHorizontalAlignment('left');
   sheet.getRange(`G${headerRow}`).setValue('Rep').setHorizontalAlignment('center');
@@ -227,6 +249,13 @@ function writeLowAlertsDynamic(sheet, lows, startRow) {
   
   // Handle empty state - "No low ratings today!"
   if (lows.length === 0) {
+    // Break apart cells first
+    try {
+      sheet.getRange(`B${startRow}:F${startRow}`).breakApart();
+    } catch (e) {
+      console.log('No merged cells to break apart');
+    }
+    
     sheet.getRange(`B${startRow}:F${startRow}`)
       .merge()
       .setValue("No low ratings today!")
@@ -248,6 +277,13 @@ function writeLowAlertsDynamic(sheet, lows, startRow) {
   // Write the rows
   show.forEach((r, i) => {
     const row = startRow + i;
+    
+    // Safely break apart any merged cells in this row first
+    try {
+      sheet.getRange(`B${row}:O${row}`).breakApart();
+    } catch (e) {
+      console.log('No merged cells to break apart in row ' + row);
+    }
     
     // Set cell formatting for the entire row
     sheet.getRange(`B${row}:O${row}`)
@@ -312,6 +348,13 @@ function aggregateBy(data, key, aggFn) {
 }
 
 function formatRepTableHeader(sheet) {
+  // Unmerge any existing merged cells in this row first
+  try {
+    sheet.getRange('B12:O12').breakApart();
+  } catch (e) {
+    console.log('No merged cells to break apart');
+  }
+  
   // Format the header row
   sheet.getRange('B12:O12')
     .setBackground('#f8f9fa')
