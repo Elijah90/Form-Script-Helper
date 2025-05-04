@@ -1,0 +1,203 @@
+/**
+ * DailyDashboardTest.gs
+ * Sheet-bound Apps Script: Test version of the Daily Performance Dashboard.
+ * Reads from 'TestData' sheet, writes to 'Daily Dashboard' with dynamic tables.
+ */
+
+// ─── CONFIGURATION ───
+const TEST_DATA_SHEET = 'TestData';
+const DASHBOARD_SHEET = 'Daily Dashboard';
+
+// ─── MAIN ENTRYPOINT ───
+function updateDailyDashboardTest() {
+  console.log('▶️ Starting updateDailyDashboardTest');
+  try {
+    const ss        = SpreadsheetApp.getActiveSpreadsheet();
+    const dash      = ss.getSheetByName(DASHBOARD_SHEET);
+    const dataSheet = ss.getSheetByName(TEST_DATA_SHEET);
+    if (!dash || !dataSheet) {
+      console.error('❌ Missing sheet:', !dash ? DASHBOARD_SHEET : TEST_DATA_SHEET);
+      throw new Error(`Missing sheet: ${!dash ? DASHBOARD_SHEET : TEST_DATA_SHEET}`);
+    }
+
+    // 1) Load TestData
+    const allValues = dataSheet.getDataRange().getValues();
+    console.log(`📊 Loaded ${allValues.length - 1} rows from '${TEST_DATA_SHEET}'`);
+    if (allValues.length < 2) {
+      console.warn('⚠️ No test data found, clearing dashboard');
+      clearKPI(dash);
+      writeRepTableDynamic(dash, []);
+      writeLowAlertsDynamic(dash, []);
+      dash.getRange('A2').setValue(`Last updated: ${formatDate(new Date())}`);
+      return;
+    }
+    const header = allValues[0];
+    const rows   = allValues.slice(1);
+    const C = header.reduce((m, title, i) => { m[title] = i; return m; }, {});
+
+    // 2) Parse rows
+    const parsed = rows.map(r => {
+      const raw     = r[C['Timestamp']];
+      const timestamp = parseTimestamp(raw);
+      const email     = r[C['Email Address']];
+      const rep       = r[C['Who attended to your needs?']];
+      const stars     = Number(r[C['How would you rate our services on a scale of 1 to 5 stars?']]);
+      let issues = '';
+      if (r[C['Has your need been met?']] === 'No') {
+        issues = r[C['You chose NO, Please share your feedback. (1)']];
+      } else if (r[C["Were you satisfied with the Rep's presentation?"]] === 'No') {
+        issues = r[C['You chose NO, Please share your feedback. (2)']];
+      } else if (r[C['Did the information and product knowledge match your expectations?']] === 'No') {
+        issues = r[C['You chose NO, Please share your feedback. (3)']];
+      }
+      return { timestamp, email, rep, stars, issues };
+    });
+    console.log(`🔍 Parsed ${parsed.length} entries`);
+
+    // 3) Separate today vs. yesterday
+    const today     = new Date();
+    const yesterday = offsetDate(today, -1);
+    const todayData     = parsed.filter(x => isSameDay(x.timestamp, today));
+    const yesterdayData = parsed.filter(x => isSameDay(x.timestamp, yesterday));
+    console.log('📅 Counts:', { today: todayData.length, yesterday: yesterdayData.length });
+
+    // 4) Compute KPIs
+    const total    = todayData.length;
+    const avgToday = total ? mean(todayData.map(x => x.stars)) : 0;
+    const avgYest  = yesterdayData.length ? mean(yesterdayData.map(x => x.stars)) : null;
+    const delta    = avgYest !== null ? +(avgToday - avgYest).toFixed(2) : null;
+    const lowCount = todayData.filter(x => x.stars < 3).length;
+    const fiveStar = todayData.filter(x => x.stars === 5).length;
+    console.log('📈 KPIs:', { total, avgToday, avgYest, delta, lowCount, fiveStar });
+
+    // 5) Write KPI boxes
+    dash.getRange('B5').setValue(total);
+    dash.getRange('F5').setValue(+avgToday.toFixed(2));
+    dash.getRange('F7').setValue(delta === null ? '' : (delta > 0 ? `↑ ${delta}` : `↓ ${Math.abs(delta)}`));
+    dash.getRange('J5').setValue(lowCount);
+    dash.getRange('J7').setValue(lowCount === 0 ? '' : 'Need attention');
+    dash.getRange('N5').setValue(fiveStar);
+
+    // 6) Rep table dynamic
+    const repStats = aggregateBy(todayData, 'rep', group => ({
+      count:    group.length,
+      avg:      +mean(group.map(x => x.stars)).toFixed(2),
+      low:      group.filter(x => x.stars < 3).length,
+      fiveStar: group.filter(x => x.stars === 5).length
+    }));
+    console.log('📋 repStats:', repStats);
+    writeRepTableDynamic(dash, repStats);
+
+    // 7) Low Rating Alerts dynamic
+    const lowAlerts = todayData.filter(x => x.stars < 3).sort((a,b) => a.stars - b.stars);
+    console.log('🚨 lowAlerts:', lowAlerts);
+    writeLowAlertsDynamic(dash, lowAlerts);
+
+    // 8) Last updated timestamp
+    dash.getRange('A2').setValue(`Last updated: ${formatDate(new Date())}`);
+    console.log('✅ updateDailyDashboardTest completed');
+  } catch (err) {
+    console.error('❌ Error in updateDailyDashboardTest:', err);
+    throw err;
+  }
+}
+
+// ─── CLEAR KPI ───
+function clearKPI(sheet) {
+  ['B5','F5','F7','J5','J7','N5'].forEach(cell => sheet.getRange(cell).clearContent());
+}
+
+// ─── WRITE REP TABLE DYNAMIC ───
+function writeRepTableDynamic(sheet, stats) {
+  const START = 13, MAX = 8;
+  const top   = stats.slice(0, MAX-1);
+  const extra = stats.slice(MAX-1);
+  const disp  = top.slice();
+  if (extra.length) {
+    const agg = extra.reduce((a, r) => {
+      a.count     += r.count;
+      a.low       += r.low;
+      a.fiveStar  += r.fiveStar;
+      a.sumStars  += r.avg * r.count;
+      a.total     += r.count;
+      return a;
+    }, { rep:'Others', count:0, low:0, fiveStar:0, sumStars:0, total:0 });
+    agg.avg = +(agg.sumStars / agg.total).toFixed(2);
+    disp.push(agg);
+  }
+  while (disp.length < MAX) disp.push({ rep:'', count:'', avg:'', low:'', fiveStar:'' });
+  sheet.getRange(`B${START}:O${START+MAX-1}`).clearContent();
+  disp.forEach((r, i) => {
+    const row = START + i;
+    sheet.getRange(`B${row}`).setValue(r.rep);
+    sheet.getRange(`F${row}`).setValue(r.count);
+    sheet.getRange(`H${row}`).setValue(r.avg);
+    sheet.getRange(`K${row}`).setValue(r.low);
+    sheet.getRange(`N${row}`).setValue(r.fiveStar);
+  });
+}
+
+// ─── WRITE LOW ALERTS DYNAMIC ───
+function writeLowAlertsDynamic(sheet, lows) {
+  const START = 24, MIN = 3, MAX = 8;
+  sheet.getRange(`B${START}:O${START+MAX-1}`).clearContent().clearFormat();
+  const msg = sheet.getRange('B24:F24');
+  msg.breakApart()
+     .setFontColor('#bf360c')
+     .setBackground('#fff5f5')
+     .setBorder(true,true,true,true,false,false,'#ec6759', SpreadsheetApp.BorderStyle.SOLID);
+  const show = lows.slice(0, MAX);
+  while (show.length < MIN) show.push({ timestamp:null, email:'', rep:'', stars:'', issues:'' });
+  show.forEach((r, i) => {
+    const row = START + i;
+    if (r.timestamp) {
+      sheet.getRange(`B${row}:C${row}`)
+           .merge()
+           .setValue(r.timestamp)
+           .setNumberFormat('h:mm:ss AM/PM');
+    }
+    sheet.getRange(`D${row}:F${row}`).merge().setValue(r.email);
+    sheet.getRange(`G${row}`).setValue(r.rep);
+    sheet.getRange(`I${row}:J${row}`).merge().setValue(r.stars);
+    sheet.getRange(`L${row}:O${row}`).merge().setValue(r.issues);
+  });
+}
+
+// ─── HELPERS ───
+function parseTimestamp(s) {
+  if (s instanceof Date) return s;
+  if (typeof s === 'string') {
+    const p = s.split(/[/ :]/).map(Number);
+    return new Date(p[2], p[0]-1, p[1], p[3], p[4], p[5]);
+  }
+  if (typeof s === 'number') return new Date(s);
+  return new Date(s);
+}
+
+function isSameDay(a, b) {
+  return a.getFullYear() === b.getFullYear() &&
+         a.getMonth() === b.getMonth() &&
+         a.getDate() === b.getDate();
+}
+
+function offsetDate(d, delta) {
+  const x = new Date(d);
+  x.setDate(x.getDate() + delta);
+  return x;
+}
+
+function mean(arr) {
+  return arr.reduce((sum, v) => sum + v, 0) / (arr.length || 1);
+}
+
+function formatDate(d) {
+  return Utilities.formatDate(d, Session.getScriptTimeZone(), 'MMM dd, yyyy hh:mm a');
+}
+
+function aggregateBy(data, key, aggFn) {
+  const groups = data.reduce((m, r) => {
+    (m[r[key]] = m[r[key]] || []).push(r);
+    return m;
+  }, {});
+  return Object.entries(groups).map(([k, v]) => Object.assign({ rep: k }, aggFn(v)));
+}
