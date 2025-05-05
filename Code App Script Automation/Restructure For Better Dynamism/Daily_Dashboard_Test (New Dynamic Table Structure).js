@@ -315,10 +315,25 @@ function writeRepTableDynamic(sheet, stats, startRow) {
     
     // Set values with proper type handling
     sheet.getRange(`B${row}`).setValue(repValue).setHorizontalAlignment('left');
-    sheet.getRange(`F${row}:G${row}`).merge().setValue(r.count || '').setHorizontalAlignment('center');
-    sheet.getRange(`H${row}:J${row}`).merge().setValue(r.avg || '').setHorizontalAlignment('center');
-    sheet.getRange(`K${row}:L${row}`).merge().setValue(r.low || '').setHorizontalAlignment('center');
-    sheet.getRange(`N${row}:O${row}`).merge().setValue(r.fiveStar || '').setHorizontalAlignment('center');
+    
+    // Format values to show '-' for zero or empty values
+    const countValue = (r.count === 0 || r.count === '') ? '-' : r.count;
+    const avgValue = (r.avg === 0 || r.avg === '') ? '-' : r.avg;
+    const lowValue = (r.low === 0 || r.low === '') ? '-' : r.low;
+    const fiveStarValue = (r.fiveStar === 0 || r.fiveStar === '') ? '-' : r.fiveStar;
+    
+    // Log formatted values for debugging
+    console.log(`Formatted values for ${repValue}:`, {
+      count: countValue,
+      avg: avgValue,
+      low: lowValue,
+      fiveStar: fiveStarValue
+    });
+    
+    sheet.getRange(`F${row}:G${row}`).merge().setValue(countValue).setHorizontalAlignment('center');
+    sheet.getRange(`H${row}:J${row}`).merge().setValue(avgValue).setHorizontalAlignment('center');
+    sheet.getRange(`K${row}:L${row}`).merge().setValue(lowValue).setHorizontalAlignment('center');
+    sheet.getRange(`N${row}:O${row}`).merge().setValue(fiveStarValue).setHorizontalAlignment('center');
     
     // Apply row formatting
     sheet.getRange(`B${row}:O${row}`)
@@ -460,11 +475,24 @@ function writeLowAlertsDynamic(sheet, lows, startRow) {
     }
     
     // Format email to show in a more readable format with rep name
-    const formattedEmail = r.email ? `${r.email}` : '';
+    const formattedEmail = r.email ? `${r.email}` : '-';
+    
+    // Format values to show '-' for zero or empty values
+    const starsValue = (r.stars === 0 || r.stars === '') ? '-' : r.stars;
+    const issuesValue = r.issues || '-';
+    
+    // Log formatted values for debugging
+    console.log(`Formatted low alert values for row ${row}:`, {
+      email: formattedEmail,
+      rep: repValue,
+      stars: starsValue,
+      issues: issuesValue
+    });
+    
     sheet.getRange(`D${row}:F${row}`).merge().setValue(formattedEmail).setHorizontalAlignment('left');
-    sheet.getRange(`G${row}`).setValue(repValue).setHorizontalAlignment('center');
-    sheet.getRange(`I${row}:J${row}`).merge().setValue(r.stars || '').setHorizontalAlignment('center');
-    sheet.getRange(`L${row}:O${row}`).merge().setValue(r.issues || '').setHorizontalAlignment('left');
+    sheet.getRange(`G${row}`).setValue(repValue || '-').setHorizontalAlignment('center');
+    sheet.getRange(`I${row}:J${row}`).merge().setValue(starsValue).setHorizontalAlignment('center');
+    sheet.getRange(`L${row}:O${row}`).merge().setValue(issuesValue).setHorizontalAlignment('left');
   });
 }
 
