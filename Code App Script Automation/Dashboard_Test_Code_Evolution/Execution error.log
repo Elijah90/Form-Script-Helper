@@ -1,0 +1,14 @@
+May 5, 2025, 2:05:52 PM	Debug	▶️ Starting updateDailyDashboardTest
+May 5, 2025, 2:05:52 PM	Debug	📊 Loaded 80 rows from 'TestData'
+May 5, 2025, 2:05:52 PM	Debug	🔍 Parsed 80 entries
+May 5, 2025, 2:05:52 PM	Debug	📅 Counts: { today: 0, yesterday: 40 }
+May 5, 2025, 2:05:52 PM	Debug	📈 KPIs: { total: 0,
+  avgToday: 0,
+  avgYest: 3.9,
+  delta: -3.9,
+  lowCount: 0,
+  fiveStar: 0 }
+May 5, 2025, 2:05:52 PM	Debug	📋 repStats: []
+May 5, 2025, 2:05:52 PM	Error	❌ Error in updateDailyDashboardTest: [ReferenceError: sheet is not defined]
+May 5, 2025, 2:05:52 PM	Error	ReferenceError: sheet is not defined
+    at updateDailyDashboardTest(DailyDashboardTest:101:5)
