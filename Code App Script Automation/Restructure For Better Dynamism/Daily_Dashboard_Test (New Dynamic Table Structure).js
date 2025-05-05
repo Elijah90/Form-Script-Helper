@@ -57,13 +57,18 @@ function updateDailyDashboardTest() {
       }
       
       // Check if the rep column exists and handle it properly
-      let rep = 'Unknown';
+      let rep;
       if (C['Who attended to your needs?'] !== undefined) {
-        rep = r[C['Who attended to your needs?']] || 'Unknown';
+        rep = r[C['Who attended to your needs?']];
       } else if (C['Rep'] !== undefined) {
-        rep = r[C['Rep']] || 'Unknown';
+        rep = r[C['Rep']];
       } else if (C['Representative'] !== undefined) {
-        rep = r[C['Representative']] || 'Unknown';
+        rep = r[C['Representative']];
+      }
+      
+      // Only set to 'Unknown' if truly undefined or null
+      if (rep === undefined || rep === null || rep === '') {
+        rep = 'Unknown';
       }
       
       // Log the rep value to see what's happening
@@ -427,8 +432,11 @@ function aggregateBy(data, key, aggFn) {
   
   const groups = data.reduce((m, r) => {
     // Handle undefined or null values for the key
-    const keyValue = r[key] || 'Unknown';
-    (m[keyValue] = m[keyValue] || []).push(r);
+    const keyValue = r[key];
+    // Only use 'Unknown' if the value is truly undefined or null
+    // This prevents overriding actual values like empty strings
+    const groupKey = (keyValue === undefined || keyValue === null) ? 'Unknown' : keyValue;
+    (m[groupKey] = m[groupKey] || []).push(r);
     return m;
   }, {});
   
