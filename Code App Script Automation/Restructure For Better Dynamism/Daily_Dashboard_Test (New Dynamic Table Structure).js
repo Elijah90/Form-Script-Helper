@@ -1,0 +1,406 @@
+/**
+ * DailyDashboardTest.gs
+ * Sheet-bound Apps Script: Test version of the Daily Performance Dashboard.
+ * Reads from 'TestData' sheet, writes to 'Daily Dashboard' with dynamic tables.
+ * 
+ * This version implements a fully dynamic table structure that:
+ * 1. Completely clears the dashboard area before rebuilding
+ * 2. Dynamically positions tables based on content
+ * 3. Properly handles formatting for all states (min/max rows)
+ * 4. Prevents formatting issues when switching between states
+ */
+
+// ─── CONFIGURATION ───
+const TEST_DATA_SHEET = 'TestData';
+const DASHBOARD_SHEET = 'Daily Dashboard';
+const DASHBOARD_START_ROW = 10; // Row where tables begin (after KPI section)
+const DASHBOARD_END_ROW = 50;   // Far enough to cover all possible table content
+
+// ─── MAIN ENTRYPOINT ───
+function updateDailyDashboardTest() {
+  console.log('▶️ Starting updateDailyDashboardTest');
+  try {
+    const ss        = SpreadsheetApp.getActiveSpreadsheet();
+    const dash      = ss.getSheetByName(DASHBOARD_SHEET);
+    const dataSheet = ss.getSheetByName(TEST_DATA_SHEET);
+    if (!dash || !dataSheet) {
+      console.error('❌ Missing sheet:', !dash ? DASHBOARD_SHEET : TEST_DATA_SHEET);
+      throw new Error(`Missing sheet: ${!dash ? DASHBOARD_SHEET : TEST_DATA_SHEET}`);
+    }
+
+    // 1) Load TestData
+    const allValues = dataSheet.getDataRange().getValues();
+    console.log(`📊 Loaded ${allValues.length - 1} rows from '${TEST_DATA_SHEET}'`);
+    if (allValues.length < 2) {
+      console.warn('⚠️ No test data found, clearing dashboard');
+      clearKPI(dash);
+      
+      // Clear entire dashboard area
+      clearDashboardArea(dash);
+      
+      dash.getRange('A2').setValue(`Last updated: ${formatDate(new Date())}`);
+      return;
+    }
+    const header = allValues[0];
+    const rows   = allValues.slice(1);
+    const C = header.reduce((m, title, i) => { m[title] = i; return m; }, {});
+
+    // 2) Parse rows
+    const parsed = rows.map(r => {
+      const raw     = r[C['Timestamp']];
+      const timestamp = parseTimestamp(raw);
+      const email     = r[C['Email Address']];
+      const rep       = r[C['Who attended to your needs?']];
+      const stars     = Number(r[C['How would you rate our services on a scale of 1 to 5 stars?']]);
+      let issues = '';
+      if (r[C['Has your need been met?']] === 'No') {
+        issues = r[C['You chose NO, Please share your feedback. (1)']];
+      } else if (r[C["Were you satisfied with the Rep's presentation?"]] === 'No') {
+        issues = r[C['You chose NO, Please share your feedback. (2)']];
+      } else if (r[C['Did the information and product knowledge match your expectations?']] === 'No') {
+        issues = r[C['You chose NO, Please share your feedback. (3)']];
+      }
+      return { timestamp, email, rep, stars, issues };
+    });
+    console.log(`🔍 Parsed ${parsed.length} entries`);
+
+    // 3) Separate today vs. yesterday
+    const today     = new Date();
+    const yesterday = offsetDate(today, -1);
+    const todayData     = parsed.filter(x => isSameDay(x.timestamp, today));
+    const yesterdayData = parsed.filter(x => isSameDay(x.timestamp, yesterday));
+    console.log('📅 Counts:', { today: todayData.length, yesterday: yesterdayData.length });
+
+    // 4) Compute KPIs
+    const total    = todayData.length;
+    const avgToday = total ? mean(todayData.map(x => x.stars)) : 0;
+    const avgYest  = yesterdayData.length ? mean(yesterdayData.map(x => x.stars)) : null;
+    const delta    = avgYest !== null ? +(avgToday - avgYest).toFixed(2) : null;
+    const lowCount = todayData.filter(x => x.stars < 3).length;
+    const fiveStar = todayData.filter(x => x.stars === 5).length;
+    console.log('📈 KPIs:', { total, avgToday, avgYest, delta, lowCount, fiveStar });
+
+    // 5) Write KPI boxes
+    dash.getRange('B5').setValue(total);
+    dash.getRange('F5').setValue(+avgToday.toFixed(2));
+    dash.getRange('F7').setValue(delta === null ? '' : (delta > 0 ? `↑ ${delta}` : `↓ ${Math.abs(delta)}`));
+    dash.getRange('J5').setValue(lowCount);
+    dash.getRange('J7').setValue(lowCount === 0 ? '' : 'Need attention');
+    dash.getRange('N5').setValue(fiveStar);
+
+    // IMPORTANT: Clear entire dashboard area before rebuilding
+    clearDashboardArea(dash);
+    
+    // 6) Create Rep Performance Table Section
+    // 6.1 Write section title
+    const repTitleRow = DASHBOARD_START_ROW;
+    dash.getRange(`B${repTitleRow}:H${repTitleRow}`)
+      .merge()
+      .setValue("Representative Performances")
+      .setFontSize(17)
+      .setFontWeight('bold')
+      .setHorizontalAlignment('left');
+    
+    // 6.2 Create header row (fixed at repTitleRow + 2)
+    const repHeaderRow = repTitleRow + 2;
+    formatRepTableHeader(dash, repHeaderRow);
+    
+    // 6.3 Prepare rep stats
+    const repStats = aggregateBy(todayData, 'rep', group => ({
+      count: group.length,
+      avg: +mean(group.map(x => x.stars)).toFixed(2),
+      low: group.filter(x => x.stars < 3).length,
+      fiveStar: group.filter(x => x.stars === 5).length
+    }));
+    console.log('📋 repStats:', repStats);
+    
+    // 6.4 Write table data starting at repHeaderRow + 1
+    const repTableStartRow = repHeaderRow + 1;
+    const repTableEndRow = writeRepTableDynamic(dash, repStats, repTableStartRow);
+    
+    // 7) Create Low Rating Alerts Section
+    // 7.1 Write section title with correct spacing
+    const lowTitleRow = repTableEndRow + 3;
+    dash.getRange(`B${lowTitleRow}:H${lowTitleRow}`)
+      .merge()
+      .setValue("Low Rating Alerts")
+      .setFontSize(17)
+      .setFontWeight('bold')
+      .setHorizontalAlignment('left');
+    
+    // 7.2 Create header row
+    const lowHeaderRow = lowTitleRow + 2;
+    formatLowAlertHeader(dash, lowHeaderRow);
+    
+    // 7.3 Write low rating data
+    const lowDataStartRow = lowHeaderRow + 1;
+    const lowAlerts = todayData.filter(x => x.stars < 3).sort((a,b) => a.stars - b.stars);
+    console.log('🚨 lowAlerts:', lowAlerts);
+    writeLowAlertsDynamic(dash, lowAlerts, lowDataStartRow);
+    
+    // Update timestamp
+    dash.getRange('A2').setValue(`Last updated: ${formatDate(new Date())}`);
+    
+  } catch (err) {
+    console.error('❌ Error in updateDailyDashboardTest:', err);
+    throw err;
+  }
+}
+
+// ─── CLEAR DASHBOARD AREA ───
+function clearDashboardArea(sheet) {
+  // Clear all content in the dashboard area
+  sheet.getRange(`B${DASHBOARD_START_ROW}:O${DASHBOARD_END_ROW}`).clearContent();
+  
+  // Break apart any merged cells
+  try {
+    sheet.getRange(`B${DASHBOARD_START_ROW}:O${DASHBOARD_END_ROW}`).breakApart();
+  } catch (e) {
+    console.log('Some cells could not be broken apart, continuing anyway');
+  }
+  
+  // Clear all formatting
+  sheet.getRange(`B${DASHBOARD_START_ROW}:O${DASHBOARD_END_ROW}`)
+    .clearFormat()
+    .setBorder(false, false, false, false, false, false);
+}
+
+// ─── CLEAR KPI ───
+function clearKPI(sheet) {
+  ['B5','F5','F7','J5','J7','N5'].forEach(cell => sheet.getRange(cell).clearContent());
+}
+
+// ─── FORMAT REP TABLE HEADER ───
+function formatRepTableHeader(sheet, headerRow) {
+  // Unmerge any existing merged cells in this row first
+  try {
+    sheet.getRange(`B${headerRow}:O${headerRow}`).breakApart();
+  } catch (e) {
+    console.log('No merged cells to break apart');
+  }
+  
+  // Format the header row
+  sheet.getRange(`B${headerRow}:O${headerRow}`)
+    .setBackground('#f8f9fa')
+    .setBorder(true, true, true, true, false, false, '#dedede', SpreadsheetApp.BorderStyle.SOLID)
+    .setFontWeight('bold')
+    .setFontSize(10)
+    .setFontColor('#666666');
+  
+  // Ensure proper merges
+  sheet.getRange(`B${headerRow}`).setValue('Representative').setHorizontalAlignment('left');
+  sheet.getRange(`F${headerRow}:G${headerRow}`).merge().setValue('Responses').setHorizontalAlignment('center');
+  sheet.getRange(`H${headerRow}:J${headerRow}`).merge().setValue('Avg. Rating').setHorizontalAlignment('center');
+  sheet.getRange(`K${headerRow}:L${headerRow}`).merge().setValue('Low Rating').setHorizontalAlignment('center');
+  sheet.getRange(`N${headerRow}:O${headerRow}`).merge().setValue('5 Star Count').setHorizontalAlignment('center');
+}
+
+// ─── WRITE REP TABLE DYNAMIC ───
+function writeRepTableDynamic(sheet, stats, startRow) {
+  const MIN_ROWS = 5;
+  const MAX_ROWS = 8;
+  const MAX_NAMED_REPS = 8;
+  
+  // Process the data as before
+  let disp = [];
+  
+  if (stats.length <= MAX_NAMED_REPS) {
+    disp = stats.slice();
+  } else {
+    const top = stats.slice(0, MAX_NAMED_REPS - 1);
+    const extra = stats.slice(MAX_NAMED_REPS - 1);
+    
+    disp = top.slice();
+    
+    // Create "Others" row by aggregating
+    const agg = extra.reduce((a, r) => {
+      a.count += r.count || 0;
+      a.low += r.low || 0;
+      a.fiveStar += r.fiveStar || 0;
+      a.sumStars += (r.avg || 0) * (r.count || 1);
+      a.total += r.count || 1;
+      return a;
+    }, { rep:'Others', count:0, low:0, fiveStar:0, sumStars:0, total:0 });
+    
+    agg.avg = +(agg.sumStars / agg.total).toFixed(2) || 0;
+    disp.push(agg);
+  }
+  
+  // Ensure minimum rows
+  while (disp.length < MIN_ROWS) {
+    disp.push({ rep:'', count:'', avg:'', low:'', fiveStar:'' });
+  }
+  
+  // Calculate rows to use
+  const rowsToUse = Math.min(Math.max(disp.length, MIN_ROWS), MAX_ROWS);
+  
+  // Write data rows with complete formatting for each
+  disp.slice(0, rowsToUse).forEach((r, i) => {
+    const row = startRow + i;
+    
+    // Clear and format row completely
+    sheet.getRange(`B${row}:O${row}`)
+      .clearContent()
+      .clearFormat()
+      .setBackground('#ffffff')
+      .setBorder(true, true, true, true, false, false, '#dedede', SpreadsheetApp.BorderStyle.SOLID)
+      .setFontSize(10)
+      .setFontColor('#000000')
+      .setFontWeight('normal');
+    
+    // Set values with proper formatting
+    sheet.getRange(`B${row}`).setValue(r.rep || '').setHorizontalAlignment('left');
+    
+    try {
+      sheet.getRange(`F${row}:G${row}`).merge().setValue(r.count || '').setHorizontalAlignment('center');
+      sheet.getRange(`H${row}:J${row}`).merge().setValue(r.avg || '').setHorizontalAlignment('center');
+      sheet.getRange(`K${row}:L${row}`).merge().setValue(r.low || '').setHorizontalAlignment('center');
+      sheet.getRange(`N${row}:O${row}`).merge().setValue(r.fiveStar || '').setHorizontalAlignment('center');
+    } catch (e) {
+      console.log('Error merging cells in row ' + row + ': ' + e.message);
+    }
+    
+    // Special formatting for "Others" row
+    if (r.rep === 'Others') {
+      sheet.getRange(`B${row}:O${row}`)
+        .setFontColor('#b7b7b7')
+        .setFontStyle('italic');
+    }
+  });
+  
+  // Return the last row used (for next section positioning)
+  return startRow + rowsToUse - 1;
+}
+
+// ─── FORMAT LOW ALERT HEADER ───
+function formatLowAlertHeader(sheet, headerRow) {
+  // Unmerge any existing merged cells in this row first
+  try {
+    sheet.getRange(`B${headerRow}:O${headerRow}`).breakApart();
+  } catch (e) {
+    console.log('No merged cells to break apart');
+  }
+  
+  // Format the header row
+  sheet.getRange(`B${headerRow}:O${headerRow}`)
+    .setBackground('#fee7e8')
+    .setBorder(true, true, true, true, false, false, '#ec6759', SpreadsheetApp.BorderStyle.SOLID)
+    .setFontWeight('bold')
+    .setFontSize(10)
+    .setFontColor('#c0392b');
+  
+  // Now merge cells
+  sheet.getRange(`B${headerRow}:C${headerRow}`).merge().setValue('Time').setHorizontalAlignment('left');
+  sheet.getRange(`D${headerRow}:F${headerRow}`).merge().setValue('Customer').setHorizontalAlignment('left');
+  sheet.getRange(`G${headerRow}`).setValue('Rep').setHorizontalAlignment('center');
+  sheet.getRange(`I${headerRow}:J${headerRow}`).merge().setValue('Rating').setHorizontalAlignment('center');
+  sheet.getRange(`L${headerRow}:O${headerRow}`).merge().setValue('Issues').setHorizontalAlignment('left');
+}
+
+// ─── WRITE LOW ALERTS DYNAMIC ───
+function writeLowAlertsDynamic(sheet, lows, startRow) {
+  const MIN_ROWS = 3;
+  const MAX_ROWS = 8;
+  
+  // Handle empty state - "No low ratings today!"
+  if (lows.length === 0) {
+    // Break apart cells first
+    try {
+      sheet.getRange(`B${startRow}:F${startRow}`).breakApart();
+    } catch (e) {
+      console.log('No merged cells to break apart');
+    }
+    
+    sheet.getRange(`B${startRow}:F${startRow}`)
+      .merge()
+      .setValue("No low ratings today!")
+      .setHorizontalAlignment('center')
+      .setFontColor('#2e7d32')
+      .setBackground('#fff5f5')
+      .setFontSize(10);
+    return;
+  }
+  
+  // Get data to show (up to MAX_ROWS)
+  const show = lows.slice(0, MAX_ROWS);
+  
+  // Fill with empty rows if needed to meet minimum
+  while (show.length < MIN_ROWS) {
+    show.push({ timestamp:null, email:'', rep:'', stars:'', issues:'' });
+  }
+  
+  // Write the rows
+  show.forEach((r, i) => {
+    const row = startRow + i;
+    
+    // Safely break apart any merged cells in this row first
+    try {
+      sheet.getRange(`B${row}:O${row}`).breakApart();
+    } catch (e) {
+      console.log('No merged cells to break apart in row ' + row);
+    }
+    
+    // Clear and set cell formatting for the entire row
+    sheet.getRange(`B${row}:O${row}`)
+      .clearContent()
+      .clearFormat()
+      .setBackground('#fff5f5')
+      .setBorder(true, true, true, true, false, false, '#ec6759', SpreadsheetApp.BorderStyle.SOLID)
+      .setFontSize(10)
+      .setFontColor('#c0392b')
+      .setFontWeight('normal');
+    
+    // Set values with proper merging and formatting
+    if (r.timestamp) {
+      sheet.getRange(`B${row}:C${row}`)
+        .merge()
+        .setValue(r.timestamp)
+        .setNumberFormat('h:mm:ss AM/PM')
+        .setHorizontalAlignment('left');
+    }
+    
+    sheet.getRange(`D${row}:F${row}`).merge().setValue(r.email || '').setHorizontalAlignment('left');
+    sheet.getRange(`G${row}`).setValue(r.rep || '').setHorizontalAlignment('center');
+    sheet.getRange(`I${row}:J${row}`).merge().setValue(r.stars || '').setHorizontalAlignment('center');
+    sheet.getRange(`L${row}:O${row}`).merge().setValue(r.issues || '').setHorizontalAlignment('left');
+  });
+}
+
+// ─── HELPERS ───
+function parseTimestamp(s) {
+  if (s instanceof Date) return s;
+  if (typeof s === 'string') {
+    const p = s.split(/[/ :]/).map(Number);
+    return new Date(p[2], p[0]-1, p[1], p[3], p[4], p[5]);
+  }
+  if (typeof s === 'number') return new Date(s);
+  return new Date(s);
+}
+
+function isSameDay(a, b) {
+  return a.getFullYear() === b.getFullYear() &&
+         a.getMonth() === b.getMonth() &&
+         a.getDate() === b.getDate();
+}
+
+function offsetDate(d, delta) {
+  const x = new Date(d);
+  x.setDate(x.getDate() + delta);
+  return x;
+}
+
+function mean(arr) {
+  return arr.reduce((sum, v) => sum + v, 0) / (arr.length || 1);
+}
+
+function formatDate(d) {
+  return Utilities.formatDate(d, Session.getScriptTimeZone(), 'MMM dd, yyyy hh:mm a');
+}
+
+function aggregateBy(data, key, aggFn) {
+  const groups = data.reduce((m, r) => {
+    (m[r[key]] = m[r[key]] || []).push(r);
+    return m;
+  }, {});
+  return Object.entries(groups).map(([k, v]) => Object.assign({ rep: k }, aggFn(v)));
+}
