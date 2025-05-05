@@ -46,34 +46,53 @@ function updateDailyDashboardTest() {
     const C = header.reduce((m, title, i) => { m[title] = i; return m; }, {});
 
     // 2) Parse rows
-    const parsed = rows.map(r => {
+    const parsed = rows.map((r, index) => {
       const raw     = r[C['Timestamp']];
       const timestamp = parseTimestamp(raw);
       const email     = r[C['Email Address']];
       
       // Add debugging to see what column names are available
-      if (rows.length > 0 && r === rows[0]) {
+      if (index === 0) {
         console.log('Available columns:', Object.keys(C));
       }
       
-      // Check if the rep column exists and handle it properly
+      // Enhanced rep extraction with detailed logging
       let rep;
+      let repColumnUsed = '';
+      
+      // Try all possible column names for representative
       if (C['Who attended to your needs?'] !== undefined) {
         rep = r[C['Who attended to your needs?']];
+        repColumnUsed = 'Who attended to your needs?';
       } else if (C['Rep'] !== undefined) {
         rep = r[C['Rep']];
+        repColumnUsed = 'Rep';
       } else if (C['Representative'] !== undefined) {
         rep = r[C['Representative']];
+        repColumnUsed = 'Representative';
       }
       
-      // Only set to 'Unknown' if truly undefined or null
+      // Log detailed information about the first 5 rows to help diagnose issues
+      if (index < 5) {
+        console.log(`Row ${index} rep extraction:`, {
+          email: email,
+          repColumnUsed: repColumnUsed,
+          rawRepValue: rep,
+          repType: typeof rep
+        });
+      }
+      
+      // Only set to 'Unknown' if truly undefined, null, or empty string
       if (rep === undefined || rep === null || rep === '') {
         rep = 'Unknown';
+      } else {
+        // Ensure rep is a string to avoid issues with object properties
+        rep = String(rep);
       }
       
-      // Log the rep value to see what's happening
-      if (rows.length > 0 && r === rows[0]) {
-        console.log('First row rep value:', rep);
+      // Log the final rep value for the first few rows
+      if (index < 5) {
+        console.log(`Row ${index} final rep value:`, rep);
       }
       
       const stars     = Number(r[C['How would you rate our services on a scale of 1 to 5 stars?']]);
@@ -229,8 +248,21 @@ function writeRepTableDynamic(sheet, stats, startRow) {
   // Determine display logic based on number of reps
   let disp = [];
   
-  // Debug the stats object to see what's coming in
-  console.log('Stats object:', JSON.stringify(stats));
+  // Enhanced debugging to see what's coming in
+  console.log('Stats object type:', typeof stats);
+  console.log('Stats is array:', Array.isArray(stats));
+  console.log('Stats length:', stats ? stats.length : 0);
+  console.log('Stats first few items:', stats && stats.length > 0 ? JSON.stringify(stats.slice(0, 3)) : 'empty');
+  
+  // Make sure stats is an array
+  if (!Array.isArray(stats)) {
+    console.error('Stats is not an array! Converting to array format.');
+    // If stats is not an array (possibly an object from aggregateBy), convert it
+    stats = Object.entries(stats || {}).map(([k, v]) => ({
+      rep: k,
+      ...v
+    }));
+  }
   
   if (stats.length <= MAX_NAMED_REPS) {
     // If 8 or fewer reps, show all of them (no "Others" row)
@@ -244,17 +276,20 @@ function writeRepTableDynamic(sheet, stats, startRow) {
     
     // Create "Others" row by aggregating remaining reps
     const agg = extra.reduce((a, r) => {
-      a.count += r.count;
-      a.low += r.low;
-      a.fiveStar += r.fiveStar;
-      a.sumStars += r.avg * r.count;
-      a.total += r.count;
+      a.count += r.count || 0;
+      a.low += r.low || 0;
+      a.fiveStar += r.fiveStar || 0;
+      a.sumStars += (r.avg || 0) * (r.count || 0);
+      a.total += r.count || 0;
       return a;
     }, { rep:'Others', count:0, low:0, fiveStar:0, sumStars:0, total:0 });
     
-    agg.avg = +(agg.sumStars / agg.total).toFixed(2);
+    agg.avg = agg.total ? +(agg.sumStars / agg.total).toFixed(2) : 0;
     disp.push(agg);
   }
+  
+  // Log the display data for debugging
+  console.log('Display data prepared:', disp.map(r => ({ rep: r.rep, count: r.count })));
   
   // Ensure minimum 5 rows by adding empty rows if needed
   while (disp.length < MIN_ROWS) {
@@ -275,12 +310,15 @@ function writeRepTableDynamic(sheet, stats, startRow) {
       console.log('No merged cells to break apart in row ' + row);
     }
     
-    // Set values - ensure rep is properly displayed
-    sheet.getRange(`B${row}`).setValue(r.rep).setHorizontalAlignment('left');
-    sheet.getRange(`F${row}:G${row}`).merge().setValue(r.count).setHorizontalAlignment('center');
-    sheet.getRange(`H${row}:J${row}`).merge().setValue(r.avg).setHorizontalAlignment('center');
-    sheet.getRange(`K${row}:L${row}`).merge().setValue(r.low).setHorizontalAlignment('center');
-    sheet.getRange(`N${row}:O${row}`).merge().setValue(r.fiveStar).setHorizontalAlignment('center');
+    // Ensure rep is a string and properly formatted
+    const repValue = r.rep !== undefined && r.rep !== null ? String(r.rep) : '';
+    
+    // Set values with proper type handling
+    sheet.getRange(`B${row}`).setValue(repValue).setHorizontalAlignment('left');
+    sheet.getRange(`F${row}:G${row}`).merge().setValue(r.count || '').setHorizontalAlignment('center');
+    sheet.getRange(`H${row}:J${row}`).merge().setValue(r.avg || '').setHorizontalAlignment('center');
+    sheet.getRange(`K${row}:L${row}`).merge().setValue(r.low || '').setHorizontalAlignment('center');
+    sheet.getRange(`N${row}:O${row}`).merge().setValue(r.fiveStar || '').setHorizontalAlignment('center');
     
     // Apply row formatting
     sheet.getRange(`B${row}:O${row}`)
@@ -290,10 +328,21 @@ function writeRepTableDynamic(sheet, stats, startRow) {
       .setFontColor('#000000');
     
     // Special formatting for "Others" row
-    if (r.rep === 'Others') {
+    if (repValue === 'Others') {
       sheet.getRange(`B${row}:O${row}`)
         .setFontColor('#b7b7b7')
         .setFontStyle('italic');
+    }
+    
+    // Log what we're writing for debugging
+    if (i < 3) {
+      console.log(`Writing row ${i} (${row}):`, { 
+        rep: repValue, 
+        count: r.count, 
+        avg: r.avg, 
+        low: r.low, 
+        fiveStar: r.fiveStar 
+      });
     }
   });
   
@@ -330,6 +379,15 @@ function formatLowAlertHeader(sheet, headerRow) {
 function writeLowAlertsDynamic(sheet, lows, startRow) {
   const MIN_ROWS = 3;
   const MAX_ROWS = 8;
+  
+  // Enhanced debugging for low alerts
+  console.log('Low alerts data:', lows.length > 0 ? 
+    lows.slice(0, 3).map(l => ({ 
+      email: l.email, 
+      rep: l.rep, 
+      repType: typeof l.rep, 
+      stars: l.stars 
+    })) : 'No low alerts');
   
   // Handle empty state - "No low ratings today!"
   if (lows.length === 0) {
@@ -388,8 +446,23 @@ function writeLowAlertsDynamic(sheet, lows, startRow) {
         .setHorizontalAlignment('left');
     }
     
-    sheet.getRange(`D${row}:F${row}`).merge().setValue(r.email || '').setHorizontalAlignment('left');
-    sheet.getRange(`G${row}`).setValue(r.rep || '').setHorizontalAlignment('center');
+    // Ensure rep is a string and properly formatted
+    const repValue = r.rep !== undefined && r.rep !== null ? String(r.rep) : '';
+    
+    // Log what we're writing for debugging (first few rows)
+    if (i < 3) {
+      console.log(`Writing low alert row ${i} (${row}):`, { 
+        email: r.email, 
+        rep: repValue, 
+        stars: r.stars, 
+        issues: r.issues 
+      });
+    }
+    
+    // Format email to show in a more readable format with rep name
+    const formattedEmail = r.email ? `${r.email}` : '';
+    sheet.getRange(`D${row}:F${row}`).merge().setValue(formattedEmail).setHorizontalAlignment('left');
+    sheet.getRange(`G${row}`).setValue(repValue).setHorizontalAlignment('center');
     sheet.getRange(`I${row}:J${row}`).merge().setValue(r.stars || '').setHorizontalAlignment('center');
     sheet.getRange(`L${row}:O${row}`).merge().setValue(r.issues || '').setHorizontalAlignment('left');
   });
@@ -427,21 +500,47 @@ function formatDate(d) {
 }
 
 function aggregateBy(data, key, aggFn) {
-  // Add debugging to see what's coming in
+  // Enhanced debugging to see what's coming in
   console.log(`Aggregating by ${key}, sample data:`, data.length > 0 ? JSON.stringify(data[0]) : 'empty');
   
-  const groups = data.reduce((m, r) => {
-    // Handle undefined or null values for the key
-    const keyValue = r[key];
-    // Only use 'Unknown' if the value is truly undefined or null
-    // This prevents overriding actual values like empty strings
-    const groupKey = (keyValue === undefined || keyValue === null) ? 'Unknown' : keyValue;
+  // Log all unique values for the key to help diagnose issues
+  const uniqueValues = [...new Set(data.map(item => item[key]))];
+  console.log(`All unique ${key} values:`, uniqueValues);
+  
+  // Log the first few items with their rep values for debugging
+  const sampleItems = data.slice(0, 5);
+  sampleItems.forEach((item, index) => {
+    console.log(`Sample item ${index} ${key} value:`, item[key], typeof item[key]);
+  });
+  
+  // Pre-process the data to ensure all rep values are properly formatted
+  const processedData = data.map(item => {
+    // Create a new object to avoid modifying the original
+    const newItem = {...item};
+    
+    // Ensure the key value is properly formatted
+    if (newItem[key] === undefined || newItem[key] === null || newItem[key] === '') {
+      newItem[key] = 'Unknown';
+    } else {
+      // Force to string to avoid issues with object properties
+      newItem[key] = String(newItem[key]).trim();
+    }
+    
+    return newItem;
+  });
+  
+  const groups = processedData.reduce((m, r) => {
+    // Get the properly formatted key value
+    const groupKey = r[key];
+    
+    // Ensure we're using strings as keys to avoid issues with object properties
     (m[groupKey] = m[groupKey] || []).push(r);
     return m;
   }, {});
   
-  // Debug the groups created
-  console.log('Groups created:', Object.keys(groups));
+  // Debug the groups created with counts
+  const groupCounts = Object.entries(groups).map(([k, v]) => ({ name: k, count: v.length }));
+  console.log('Groups created with counts:', groupCounts);
   
   return Object.entries(groups).map(([k, v]) => Object.assign({ rep: k }, aggFn(v)));
 }

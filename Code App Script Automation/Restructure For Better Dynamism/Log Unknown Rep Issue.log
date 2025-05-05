@@ -1,0 +1,202 @@
+Cloud logs
+May 5, 2025, 5:45:57 PM	Debug	▶️ Starting updateDailyDashboardTest
+May 5, 2025, 5:45:57 PM	Debug	📊 Loaded 80 rows from 'TestData'
+May 5, 2025, 5:45:57 PM	Debug	Available columns: [ 'Timestamp',
+  'Email Address',
+  'Who attended to you needs?',
+  'Has your need been met?',
+  'You chose NO, Please share your feedback. (1)',
+  'Were you satisfied with the Rep\'s presentation?',
+  'You chose NO, Please share your feedback. (2)',
+  'Did the information and product knowledge match your expectations?',
+  'You chose NO, Please share your feedback. (3)',
+  'How would you rate our services on a scale of 1 to 5 stars?' ]
+May 5, 2025, 5:45:57 PM	Debug	Row 0 rep extraction: { email: '[test1@gmail.com](mailto:test1@gmail.com)',
+  repColumnUsed: '',
+  rawRepValue: undefined,
+  repType: 'undefined' }
+May 5, 2025, 5:45:57 PM	Debug	Row 0 final rep value: Unknown
+May 5, 2025, 5:45:57 PM	Debug	Row 1 rep extraction: { email: '[test2@gmail.com](mailto:test2@gmail.com)',
+  repColumnUsed: '',
+  rawRepValue: undefined,
+  repType: 'undefined' }
+May 5, 2025, 5:45:57 PM	Debug	Row 1 final rep value: Unknown
+May 5, 2025, 5:45:57 PM	Debug	Row 2 rep extraction: { email: '[test3@gmail.com](mailto:test3@gmail.com)',
+  repColumnUsed: '',
+  rawRepValue: undefined,
+  repType: 'undefined' }
+May 5, 2025, 5:45:57 PM	Debug	Row 2 final rep value: Unknown
+May 5, 2025, 5:45:57 PM	Debug	Row 3 rep extraction: { email: '[test4@gmail.com](mailto:test4@gmail.com)',
+  repColumnUsed: '',
+  rawRepValue: undefined,
+  repType: 'undefined' }
+May 5, 2025, 5:45:57 PM	Debug	Row 3 final rep value: Unknown
+May 5, 2025, 5:45:57 PM	Debug	Row 4 rep extraction: { email: '[test5@gmail.com](mailto:test5@gmail.com)',
+  repColumnUsed: '',
+  rawRepValue: undefined,
+  repType: 'undefined' }
+May 5, 2025, 5:45:57 PM	Debug	Row 4 final rep value: Unknown
+May 5, 2025, 5:45:57 PM	Debug	🔍 Parsed 80 entries
+May 5, 2025, 5:45:57 PM	Debug	📅 Counts: { today: 40, yesterday: 40 }
+May 5, 2025, 5:45:57 PM	Debug	📈 KPIs: { total: 40,
+  avgToday: 2.45,
+  avgYest: 2.375,
+  delta: 0.08,
+  lowCount: 23,
+  fiveStar: 4 }
+May 5, 2025, 5:45:57 PM	Debug	Aggregating by rep, sample data: {"timestamp":"2025-05-05T13:10:05.000Z","email":"[test6@gmail.com](mailto:test6@gmail.com)","rep":"Unknown","stars":5,"issues":""}
+May 5, 2025, 5:45:57 PM	Debug	All unique rep values: [ 'Unknown' ]
+May 5, 2025, 5:45:57 PM	Debug	Sample item 0 rep value: Unknown string
+May 5, 2025, 5:45:57 PM	Debug	Sample item 1 rep value: Unknown string
+May 5, 2025, 5:45:57 PM	Debug	Sample item 2 rep value: Unknown string
+May 5, 2025, 5:45:57 PM	Debug	Sample item 3 rep value: Unknown string
+May 5, 2025, 5:45:57 PM	Debug	Sample item 4 rep value: Unknown string
+May 5, 2025, 5:45:57 PM	Debug	Groups created with counts: [ { name: 'Unknown', count: 40 } ]
+May 5, 2025, 5:45:57 PM	Debug	📋 repStats: [ { rep: 'Unknown', count: 40, avg: 2.45, low: 23, fiveStar: 4 } ]
+May 5, 2025, 5:45:57 PM	Debug	Stats object type: object
+May 5, 2025, 5:45:57 PM	Debug	Stats is array: true
+May 5, 2025, 5:45:57 PM	Debug	Stats length: 1
+May 5, 2025, 5:45:57 PM	Debug	Stats first few items: [{"rep":"Unknown","count":40,"avg":2.45,"low":23,"fiveStar":4}]
+May 5, 2025, 5:45:57 PM	Debug	Display data prepared: [ { rep: 'Unknown', count: 40 } ]
+May 5, 2025, 5:45:57 PM	Debug	Writing row 0 (13): { rep: 'Unknown', count: 40, avg: 2.45, low: 23, fiveStar: 4 }
+May 5, 2025, 5:45:57 PM	Debug	Writing row 1 (14): { rep: '', count: '', avg: '', low: '', fiveStar: '' }
+May 5, 2025, 5:45:58 PM	Debug	Writing row 2 (15): { rep: '', count: '', avg: '', low: '', fiveStar: '' }
+May 5, 2025, 5:45:58 PM	Debug	🚨 lowAlerts: [ { timestamp: Mon May 05 2025 14:27:15 GMT+0000 (Greenwich Mean Time),
+    email: '[test17@gmail.com](mailto:test17@gmail.com)',
+    rep: 'Unknown',
+    stars: 1,
+    issues: 'Resolution promised but not delivered.' },
+  { timestamp: Mon May 05 2025 16:57:35 GMT+0000 (Greenwich Mean Time),
+    email: '[test19@gmail.com](mailto:test19@gmail.com)',
+    rep: 'Unknown',
+    stars: 1,
+    issues: 'Replacement part unavailable.' },
+  { timestamp: Mon May 05 2025 17:07:45 GMT+0000 (Greenwich Mean Time),
+    email: '[test20@gmail.com](mailto:test20@gmail.com)',
+    rep: 'Unknown',
+    stars: 1,
+    issues: 'Need escalated but no update received.' },
+  { timestamp: Mon May 05 2025 15:40:25 GMT+0000 (Greenwich Mean Time),
+    email: '[test38@gmail.com](mailto:test38@gmail.com)',
+    rep: 'Unknown',
+    stars: 1,
+    issues: 'Colour variant out of stock.' },
+  { timestamp: Mon May 05 2025 17:05:45 GMT+0000 (Greenwich Mean Time),
+    email: '[test40@gmail.com](mailto:test40@gmail.com)',
+    rep: 'Unknown',
+    stars: 1,
+    issues: 'Warranty terms vague.' },
+  { timestamp: Mon May 05 2025 13:10:05 GMT+0000 (Greenwich Mean Time),
+    email: '[test46@gmail.com](mailto:test46@gmail.com)',
+    rep: 'Unknown',
+    stars: 1,
+    issues: 'Issue still unresolved despite follow-up.' },
+  { timestamp: Mon May 05 2025 14:25:15 GMT+0000 (Greenwich Mean Time),
+    email: '[test47@gmail.com](mailto:test47@gmail.com)',
+    rep: 'Unknown',
+    stars: 1,
+    issues: 'Resolution promised but not delivered.' },
+  { timestamp: Mon May 05 2025 15:40:25 GMT+0000 (Greenwich Mean Time),
+    email: '[test48@gmail.com](mailto:test48@gmail.com)',
+    rep: 'Unknown',
+    stars: 1,
+    issues: 'Still waiting for technical team to contact me.' },
+  { timestamp: Mon May 05 2025 16:55:35 GMT+0000 (Greenwich Mean Time),
+    email: '[test49@gmail.com](mailto:test49@gmail.com)',
+    rep: 'Unknown',
+    stars: 1,
+    issues: 'Replacement part unavailable.' },
+  { timestamp: Mon May 05 2025 17:05:45 GMT+0000 (Greenwich Mean Time),
+    email: '[test50@gmail.com](mailto:test50@gmail.com)',
+    rep: 'Unknown',
+    stars: 1,
+    issues: 'Need escalated but no update received.' },
+  { timestamp: Mon May 05 2025 14:25:15 GMT+0000 (Greenwich Mean Time),
+    email: '[test77@gmail.com](mailto:test77@gmail.com)',
+    rep: 'Unknown',
+    stars: 1,
+    issues: 'Specs did not match brochure.' },
+  { timestamp: Mon May 05 2025 13:12:05 GMT+0000 (Greenwich Mean Time),
+    email: '[test16@gmail.com](mailto:test16@gmail.com)',
+    rep: 'Unknown',
+    stars: 2,
+    issues: 'Issue still unresolved despite follow-up.' },
+  { timestamp: Mon May 05 2025 15:42:25 GMT+0000 (Greenwich Mean Time),
+    email: '[test18@gmail.com](mailto:test18@gmail.com)',
+    rep: 'Unknown',
+    stars: 2,
+    issues: 'Still waiting for technical team to contact me.' },
+  { timestamp: Mon May 05 2025 13:10:05 GMT+0000 (Greenwich Mean Time),
+    email: '[test26@gmail.com](mailto:test26@gmail.com)',
+    rep: 'Unknown',
+    stars: 2,
+    issues: 'Explanation unclear and rushed.' },
+  { timestamp: Mon May 05 2025 15:40:25 GMT+0000 (Greenwich Mean Time),
+    email: '[test28@gmail.com](mailto:test28@gmail.com)',
+    rep: 'Unknown',
+    stars: 2,
+    issues: 'Poor audio quality during call.' },
+  { timestamp: Mon May 05 2025 16:55:35 GMT+0000 (Greenwich Mean Time),
+    email: '[test29@gmail.com](mailto:test29@gmail.com)',
+    rep: 'Unknown',
+    stars: 2,
+    issues: 'Rep spoke too quickly.' },
+  { timestamp: Mon May 05 2025 13:10:05 GMT+0000 (Greenwich Mean Time),
+    email: '[test36@gmail.com](mailto:test36@gmail.com)',
+    rep: 'Unknown',
+    stars: 2,
+    issues: 'Delivery date too late for project.' },
+  { timestamp: Mon May 05 2025 14:25:15 GMT+0000 (Greenwich Mean Time),
+    email: '[test37@gmail.com](mailto:test37@gmail.com)',
+    rep: 'Unknown',
+    stars: 2,
+    issues: 'Specs did not match brochure.' },
+  { timestamp: Mon May 05 2025 16:55:35 GMT+0000 (Greenwich Mean Time),
+    email: '[test39@gmail.com](mailto:test39@gmail.com)',
+    rep: 'Unknown',
+    stars: 2,
+    issues: 'Pricing changed after quote.' },
+  { timestamp: Mon May 05 2025 13:10:05 GMT+0000 (Greenwich Mean Time),
+    email: '[test76@gmail.com](mailto:test76@gmail.com)',
+    rep: 'Unknown',
+    stars: 2,
+    issues: 'Delivery date too late for project.' },
+  { timestamp: Mon May 05 2025 15:40:25 GMT+0000 (Greenwich Mean Time),
+    email: '[test78@gmail.com](mailto:test78@gmail.com)',
+    rep: 'Unknown',
+    stars: 2,
+    issues: 'Colour variant out of stock.' },
+  { timestamp: Mon May 05 2025 16:55:35 GMT+0000 (Greenwich Mean Time),
+    email: '[test79@gmail.com](mailto:test79@gmail.com)',
+    rep: 'Unknown',
+    stars: 2,
+    issues: 'Pricing changed after quote.' },
+  { timestamp: Mon May 05 2025 17:05:45 GMT+0000 (Greenwich Mean Time),
+    email: '[test80@gmail.com](mailto:test80@gmail.com)',
+    rep: 'Unknown',
+    stars: 2,
+    issues: 'Warranty terms vague.' } ]
+May 5, 2025, 5:45:58 PM	Debug	Low alerts data: [ { email: '[test17@gmail.com](mailto:test17@gmail.com)',
+    rep: 'Unknown',
+    repType: 'string',
+    stars: 1 },
+  { email: '[test19@gmail.com](mailto:test19@gmail.com)',
+    rep: 'Unknown',
+    repType: 'string',
+    stars: 1 },
+  { email: '[test20@gmail.com](mailto:test20@gmail.com)',
+    rep: 'Unknown',
+    repType: 'string',
+    stars: 1 } ]
+May 5, 2025, 5:45:58 PM	Debug	Writing low alert row 0 (23): { email: '[test17@gmail.com](mailto:test17@gmail.com)',
+  rep: 'Unknown',
+  stars: 1,
+  issues: 'Resolution promised but not delivered.' }
+May 5, 2025, 5:45:58 PM	Debug	Writing low alert row 1 (24): { email: '[test19@gmail.com](mailto:test19@gmail.com)',
+  rep: 'Unknown',
+  stars: 1,
+  issues: 'Replacement part unavailable.' }
+May 5, 2025, 5:45:58 PM	Debug	Writing low alert row 2 (25): { email: '[test20@gmail.com](mailto:test20@gmail.com)',
+  rep: 'Unknown',
+  stars: 1,
+  issues: 'Need escalated but no update received.' }
