@@ -50,7 +50,27 @@ function updateDailyDashboardTest() {
       const raw     = r[C['Timestamp']];
       const timestamp = parseTimestamp(raw);
       const email     = r[C['Email Address']];
-      const rep       = r[C['Who attended to your needs?']];
+      
+      // Add debugging to see what column names are available
+      if (rows.length > 0 && r === rows[0]) {
+        console.log('Available columns:', Object.keys(C));
+      }
+      
+      // Check if the rep column exists and handle it properly
+      let rep = 'Unknown';
+      if (C['Who attended to your needs?'] !== undefined) {
+        rep = r[C['Who attended to your needs?']] || 'Unknown';
+      } else if (C['Rep'] !== undefined) {
+        rep = r[C['Rep']] || 'Unknown';
+      } else if (C['Representative'] !== undefined) {
+        rep = r[C['Representative']] || 'Unknown';
+      }
+      
+      // Log the rep value to see what's happening
+      if (rows.length > 0 && r === rows[0]) {
+        console.log('First row rep value:', rep);
+      }
+      
       const stars     = Number(r[C['How would you rate our services on a scale of 1 to 5 stars?']]);
       let issues = '';
       if (r[C['Has your need been met?']] === 'No') {
@@ -402,22 +422,17 @@ function formatDate(d) {
 }
 
 function aggregateBy(data, key, aggFn) {
-  // Debug the incoming data
-  console.log(`Aggregating by ${key}, data sample:`, data.length > 0 ? JSON.stringify(data[0]) : 'empty');
+  // Add debugging to see what's coming in
+  console.log(`Aggregating by ${key}, sample data:`, data.length > 0 ? JSON.stringify(data[0]) : 'empty');
   
   const groups = data.reduce((m, r) => {
-    // Check if the key exists and has a value
-    if (r[key] === undefined || r[key] === null) {
-      console.log('Warning: Found item with undefined or null key:', JSON.stringify(r));
-      // Use a placeholder for undefined values
-      (m['Unknown'] = m['Unknown'] || []).push(r);
-    } else {
-      (m[r[key]] = m[r[key]] || []).push(r);
-    }
+    // Handle undefined or null values for the key
+    const keyValue = r[key] || 'Unknown';
+    (m[keyValue] = m[keyValue] || []).push(r);
     return m;
   }, {});
   
-  // Debug the groups
+  // Debug the groups created
   console.log('Groups created:', Object.keys(groups));
   
   return Object.entries(groups).map(([k, v]) => Object.assign({ rep: k }, aggFn(v)));
