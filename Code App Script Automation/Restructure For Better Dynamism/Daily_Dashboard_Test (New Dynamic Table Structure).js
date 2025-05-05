@@ -61,9 +61,9 @@ function updateDailyDashboardTest() {
       let repColumnUsed = '';
       
       // Try all possible column names for representative
-      if (C['Who attended to your needs?'] !== undefined) {
-        rep = r[C['Who attended to your needs?']];
-        repColumnUsed = 'Who attended to your needs?';
+      if (C['Who attended to you needs?'] !== undefined) {
+        rep = r[C['Who attended to you needs?']];
+        repColumnUsed = 'Who attended to you needs?';
       } else if (C['Rep'] !== undefined) {
         rep = r[C['Rep']];
         repColumnUsed = 'Rep';
