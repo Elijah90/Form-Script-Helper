@@ -201,64 +201,68 @@ function writeRepTableDynamic(sheet, stats, startRow) {
   const MAX_ROWS = 8;
   const MAX_NAMED_REPS = 8;
   
-  // Process the data as before
+  // Determine display logic based on number of reps
   let disp = [];
   
+  // Debug the stats object to see what's coming in
+  console.log('Stats object:', JSON.stringify(stats));
+  
   if (stats.length <= MAX_NAMED_REPS) {
+    // If 8 or fewer reps, show all of them (no "Others" row)
     disp = stats.slice();
   } else {
+    // If more than 8 reps, show first 7 and aggregate the rest as "Others"
     const top = stats.slice(0, MAX_NAMED_REPS - 1);
     const extra = stats.slice(MAX_NAMED_REPS - 1);
     
     disp = top.slice();
     
-    // Create "Others" row by aggregating
+    // Create "Others" row by aggregating remaining reps
     const agg = extra.reduce((a, r) => {
-      a.count += r.count || 0;
-      a.low += r.low || 0;
-      a.fiveStar += r.fiveStar || 0;
-      a.sumStars += (r.avg || 0) * (r.count || 1);
-      a.total += r.count || 1;
+      a.count += r.count;
+      a.low += r.low;
+      a.fiveStar += r.fiveStar;
+      a.sumStars += r.avg * r.count;
+      a.total += r.count;
       return a;
     }, { rep:'Others', count:0, low:0, fiveStar:0, sumStars:0, total:0 });
     
-    agg.avg = +(agg.sumStars / agg.total).toFixed(2) || 0;
+    agg.avg = +(agg.sumStars / agg.total).toFixed(2);
     disp.push(agg);
   }
   
-  // Ensure minimum rows
+  // Ensure minimum 5 rows by adding empty rows if needed
   while (disp.length < MIN_ROWS) {
     disp.push({ rep:'', count:'', avg:'', low:'', fiveStar:'' });
   }
   
-  // Calculate rows to use
+  // Calculate how many rows we'll actually use
   const rowsToUse = Math.min(Math.max(disp.length, MIN_ROWS), MAX_ROWS);
   
-  // Write data rows with complete formatting for each
+  // Write the data
   disp.slice(0, rowsToUse).forEach((r, i) => {
     const row = startRow + i;
     
-    // Clear and format row completely
+    // Safely break apart any merged cells in this row first
+    try {
+      sheet.getRange(`B${row}:O${row}`).breakApart();
+    } catch (e) {
+      console.log('No merged cells to break apart in row ' + row);
+    }
+    
+    // Set values - ensure rep is properly displayed
+    sheet.getRange(`B${row}`).setValue(r.rep).setHorizontalAlignment('left');
+    sheet.getRange(`F${row}:G${row}`).merge().setValue(r.count).setHorizontalAlignment('center');
+    sheet.getRange(`H${row}:J${row}`).merge().setValue(r.avg).setHorizontalAlignment('center');
+    sheet.getRange(`K${row}:L${row}`).merge().setValue(r.low).setHorizontalAlignment('center');
+    sheet.getRange(`N${row}:O${row}`).merge().setValue(r.fiveStar).setHorizontalAlignment('center');
+    
+    // Apply row formatting
     sheet.getRange(`B${row}:O${row}`)
-      .clearContent()
-      .clearFormat()
       .setBackground('#ffffff')
       .setBorder(true, true, true, true, false, false, '#dedede', SpreadsheetApp.BorderStyle.SOLID)
       .setFontSize(10)
-      .setFontColor('#000000')
-      .setFontWeight('normal');
-    
-    // Set values with proper formatting
-    sheet.getRange(`B${row}`).setValue(r.rep || '').setHorizontalAlignment('left');
-    
-    try {
-      sheet.getRange(`F${row}:G${row}`).merge().setValue(r.count || '').setHorizontalAlignment('center');
-      sheet.getRange(`H${row}:J${row}`).merge().setValue(r.avg || '').setHorizontalAlignment('center');
-      sheet.getRange(`K${row}:L${row}`).merge().setValue(r.low || '').setHorizontalAlignment('center');
-      sheet.getRange(`N${row}:O${row}`).merge().setValue(r.fiveStar || '').setHorizontalAlignment('center');
-    } catch (e) {
-      console.log('Error merging cells in row ' + row + ': ' + e.message);
-    }
+      .setFontColor('#000000');
     
     // Special formatting for "Others" row
     if (r.rep === 'Others') {
@@ -268,7 +272,7 @@ function writeRepTableDynamic(sheet, stats, startRow) {
     }
   });
   
-  // Return the last row used (for next section positioning)
+  // Return the last row used by the table (for calculating next section position)
   return startRow + rowsToUse - 1;
 }
 
@@ -398,9 +402,23 @@ function formatDate(d) {
 }
 
 function aggregateBy(data, key, aggFn) {
+  // Debug the incoming data
+  console.log(`Aggregating by ${key}, data sample:`, data.length > 0 ? JSON.stringify(data[0]) : 'empty');
+  
   const groups = data.reduce((m, r) => {
-    (m[r[key]] = m[r[key]] || []).push(r);
+    // Check if the key exists and has a value
+    if (r[key] === undefined || r[key] === null) {
+      console.log('Warning: Found item with undefined or null key:', JSON.stringify(r));
+      // Use a placeholder for undefined values
+      (m['Unknown'] = m['Unknown'] || []).push(r);
+    } else {
+      (m[r[key]] = m[r[key]] || []).push(r);
+    }
     return m;
   }, {});
+  
+  // Debug the groups
+  console.log('Groups created:', Object.keys(groups));
+  
   return Object.entries(groups).map(([k, v]) => Object.assign({ rep: k }, aggFn(v)));
 }
