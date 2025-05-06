@@ -55,7 +55,7 @@ function formatTile(range) {
  */
 function setKpiRowHeights(sheet, startRow) {
   sheet.setRowHeight(startRow, 25);     // Title row
-  sheet.setRowHeight(startRow + 1, 45); // Main value row - taller for large text
+  sheet.setRowHeight(startRow + 1, 50); // Main value row - taller for large text
   sheet.setRowHeight(startRow + 2, 25); // Change indicator/subtitle row
   sheet.setRowHeight(startRow + 3, 25); // Additional info row
   sheet.setRowHeight(startRow + 4, 20); // Color bar row (for Average Rating)
@@ -121,55 +121,87 @@ function formatKpiValue(sheet, row, column, value) {
 }
 
 /**
- * Formats a change indicator for a KPI tile (to right of main value)
+ * Creates a KPI value with change indicator on the same row
+ * This avoids rich text formatting which can be problematic in Google Sheets
+ * 
  * @param {Sheet} sheet - The Google Sheet
- * @param {number} row - The row for the value (same as main value)
- * @param {number} column - The column for the value
- * @param {number} value - The main KPI value
+ * @param {number} row - The row for the main value
+ * @param {number} column - The column for the main value
+ * @param {number|string} value - The main KPI value
  * @param {number} change - The change value
  * @param {boolean} reverseColors - Whether to reverse the color logic (true for metrics where decreasing is good)
  */
-function formatKpiValueWithChange(sheet, row, column, value, change, reverseColors = false) {
-  if (change === 0) {
-    // If no change, just format the value
-    formatKpiValue(sheet, row, column, value);
-    return;
+
+function createSimpleKPITile(sheet, startRow, tileConfig) {
+  // Format the tile container to span 2 columns
+  formatTile(sheet.getRange(startRow, tileConfig.column, 5, 2));
+  
+  // Set the title to span both columns
+  sheet.getRange(startRow, tileConfig.column, 1, 2)
+       .merge()
+       .setValue(tileConfig.title)
+       .setFontSize(14)
+       .setFontColor("#666666")
+       .setVerticalAlignment("middle")
+       .setHorizontalAlignment("left");
+  
+  // Set the main value with change indicator (each in its own column)
+  formatKpiValueWithChange(
+    sheet, 
+    startRow + 1, 
+    tileConfig.column, 
+    tileConfig.value, 
+    tileConfig.change, 
+    tileConfig.title === "% Negative Cases"
+  );
+  
+  // Set the subtitle to span both columns
+  sheet.getRange(startRow + 2, tileConfig.column, 1, 2)
+       .merge()
+       .setValue(tileConfig.subtitle)
+       .setFontSize(12)
+       .setFontColor("#666666")
+       .setVerticalAlignment("top")
+       .setHorizontalAlignment("left");
+  
+  // Apply yellow highlight bar for Average Rating only (spanning both columns)
+  if (tileConfig.title === "Average Rating") {
+    createYellowHighlightBar(sheet, startRow + 4, tileConfig.column);
   }
-  
-  // Create the change indicator
-  let changeText = "";
-  let changeColor = DASHBOARD_COLORS.subText;
-  
-  if (change > 0) {
-    changeText = "▲ " + Math.abs(change);
-    changeColor = reverseColors ? DASHBOARD_COLORS.negative : DASHBOARD_COLORS.positive;
-  } else if (change < 0) {
-    changeText = "▼ " + Math.abs(change);
-    changeColor = reverseColors ? DASHBOARD_COLORS.positive : DASHBOARD_COLORS.negative;
-  }
-  
-  // Format the value with the change indicator
-  const combinedValue = value + " ";
-  
-  // Set the value using rich text formatting
-  const cell = sheet.getRange(row, column);
-  const richText = SpreadsheetApp.newRichTextValue()
-    .setText(combinedValue + changeText)
-    .setTextStyle(0, combinedValue.length, SpreadsheetApp.newTextStyle()
-        .setFontSize(36)
-        .setFontWeight("bold")
-        .setForegroundColor(DASHBOARD_COLORS.headerText)
-        .build())
-    .setTextStyle(combinedValue.length, combinedValue.length + changeText.length, SpreadsheetApp.newTextStyle()
-        .setFontSize(14)
-        .setForegroundColor(changeColor)
-        .build())
-    .build();
-    
-  cell.setRichTextValue(richText)
-      .setVerticalAlignment("middle")
-      .setHorizontalAlignment("left");
 }
+
+// Also update the KPI tile configurations to use columns 1,3,5,7 instead of 1,2,3,4
+// In createKPITiles function, change the kpiTiles array:
+const kpiTiles = [
+  {
+    title: "Submissions Today",
+    value: todaySubmissions,
+    change: submissionChange,
+    subtitle: "vs. yesterday",
+    column: 1  // Column A
+  },
+  {
+    title: "Average Rating",
+    value: todayAvgRating.toFixed(1),
+    change: avgRatingChange,
+    subtitle: "(out of 5.0)",
+    column: 3  // Column C
+  },
+  {
+    title: "5-Star Ratings",
+    value: todayFiveStars,
+    change: fiveStarChange,
+    subtitle: fiveStarPercentage + "% of total",
+    column: 5  // Column E
+  },
+  {
+    title: "% Negative Cases",
+    value: todayNegativePercentage + "%",
+    change: negativePercentageChange,
+    subtitle: "Action needed: " + todayNegatives + " cases",
+    column: 7  // Column G
+  }
+];
 
 /**
  * Formats a subtitle for a KPI tile
@@ -188,28 +220,15 @@ function formatKpiSubtitle(sheet, row, column, subtitle) {
 }
 
 /**
- * Applies a color rating bar for the Average Rating KPI
+ * Creates a yellow highlight bar for the Average Rating KPI
  * @param {Sheet} sheet - The Google Sheet
- * @param {number} row - The row for the color bar
- * @param {number} column - The column for the color bar
- * @param {number} rating - The rating value
+ * @param {number} row - The row for the highlight bar
+ * @param {number} column - The column for the highlight bar
  */
-function formatRatingColorBar(sheet, row, column, rating) {
-  if (isNaN(rating) || rating <= 0) return;
-  
-  let backgroundColor = DASHBOARD_COLORS.background;
-  
-  if (rating >= 4.5) {
-    backgroundColor = DASHBOARD_COLORS.positive;
-  } else if (rating >= 3.5) {
-    backgroundColor = DASHBOARD_COLORS.warning;
-  } else {
-    backgroundColor = DASHBOARD_COLORS.negative;
-  }
-  
-  // Create a bar that spans most of the cell width
+function createYellowHighlightBar(sheet, row, column) {
+  // Always use yellow highlight regardless of rating value
   sheet.getRange(row, column)
-       .setBackground(backgroundColor);
+       .setBackground(DASHBOARD_COLORS.warning); // Yellow highlight
 }
 
 /**

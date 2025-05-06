@@ -202,75 +202,77 @@ function createKPITiles(startRow) {
  * @param {number} startRow - The starting row
  * @param {Object} tileConfig - The tile configuration object
  */
+
 function createSimpleKPITile(sheet, startRow, tileConfig) {
-  // Format the tile container
-  formatTile(sheet.getRange(startRow, tileConfig.column, 5, 1));
+  // Format the tile container to span 2 columns
+  formatTile(sheet.getRange(startRow, tileConfig.column, 5, 2));
   
-  // Set the title
-  sheet.getRange(startRow, tileConfig.column)
+  // Set the title to span both columns
+  sheet.getRange(startRow, tileConfig.column, 1, 2)
+       .merge()
        .setValue(tileConfig.title)
        .setFontSize(14)
        .setFontColor("#666666")
        .setVerticalAlignment("middle")
        .setHorizontalAlignment("left");
   
-  // Set the main value directly - avoiding complex formatted functions
-  sheet.getRange(startRow + 1, tileConfig.column)
-       .setValue(tileConfig.value)
-       .setFontSize(36)
-       .setFontWeight("bold")
-       .setFontColor("#333333")
-       .setVerticalAlignment("middle")
-       .setHorizontalAlignment("left");
+  // Set the main value with change indicator (each in its own column)
+  formatKpiValueWithChange(
+    sheet, 
+    startRow + 1, 
+    tileConfig.column, 
+    tileConfig.value, 
+    tileConfig.change, 
+    tileConfig.title === "% Negative Cases"
+  );
   
-  // Set change indicator as separate cell
-  if (tileConfig.change !== 0) {
-    let changeText = "";
-    let changeColor = "#666666";
-    
-    if (tileConfig.change > 0) {
-      changeText = "▲ " + Math.abs(tileConfig.change);
-      changeColor = tileConfig.title === "% Negative Cases" ? "#F44336" : "#4CAF50";
-    } else if (tileConfig.change < 0) {
-      changeText = "▼ " + Math.abs(tileConfig.change);
-      changeColor = tileConfig.title === "% Negative Cases" ? "#4CAF50" : "#F44336";
-    }
-    
-    sheet.getRange(startRow + 2, tileConfig.column)
-         .setValue(changeText)
-         .setFontSize(14)
-         .setFontColor(changeColor)
-         .setHorizontalAlignment("left");
-  }
-  
-  // Set the subtitle
-  sheet.getRange(startRow + 3, tileConfig.column)
+  // Set the subtitle to span both columns
+  sheet.getRange(startRow + 2, tileConfig.column, 1, 2)
+       .merge()
        .setValue(tileConfig.subtitle)
        .setFontSize(12)
        .setFontColor("#666666")
        .setVerticalAlignment("top")
        .setHorizontalAlignment("left");
   
-  // Apply special formatting for Average Rating if needed
+  // Apply yellow highlight bar for Average Rating only (spanning both columns)
   if (tileConfig.title === "Average Rating") {
-    const ratingValue = parseFloat(tileConfig.value);
-    
-    if (!isNaN(ratingValue)) {
-      let backgroundColor = "#f8f9fa";
-      
-      if (ratingValue >= 4.5) {
-        backgroundColor = "#4CAF50"; // Good (green)
-      } else if (ratingValue >= 3.5) {
-        backgroundColor = "#FFEB3B"; // Satisfactory (yellow)
-      } else if (ratingValue > 0) {
-        backgroundColor = "#F44336"; // Poor (red)
-      }
-      
-      sheet.getRange(startRow + 4, tileConfig.column)
-           .setBackground(backgroundColor);
-    }
+    createYellowHighlightBar(sheet, startRow + 4, tileConfig.column);
   }
 }
+
+// Also update the KPI tile configurations to use columns 1,3,5,7 instead of 1,2,3,4
+// In createKPITiles function, change the kpiTiles array:
+const kpiTiles = [
+  {
+    title: "Submissions Today",
+    value: todaySubmissions,
+    change: submissionChange,
+    subtitle: "vs. yesterday",
+    column: 1  // Column A
+  },
+  {
+    title: "Average Rating",
+    value: todayAvgRating.toFixed(1),
+    change: avgRatingChange,
+    subtitle: "(out of 5.0)",
+    column: 3  // Column C
+  },
+  {
+    title: "5-Star Ratings",
+    value: todayFiveStars,
+    change: fiveStarChange,
+    subtitle: fiveStarPercentage + "% of total",
+    column: 5  // Column E
+  },
+  {
+    title: "% Negative Cases",
+    value: todayNegativePercentage + "%",
+    change: negativePercentageChange,
+    subtitle: "Action needed: " + todayNegatives + " cases",
+    column: 7  // Column G
+  }
+];
 
 /**
  * Creates empty KPI tiles when data cannot be loaded
