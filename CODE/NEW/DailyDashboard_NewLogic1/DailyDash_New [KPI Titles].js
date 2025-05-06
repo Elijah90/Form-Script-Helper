@@ -10,10 +10,13 @@ function createKPITiles(startRow) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName('DailyDash');
   
-  // Get data from Form Responses sheet
-  const formSheet = ss.getSheetByName('Form Responses 1');
+  // Get the data source sheet name from config
+  const dataSheetName = getDataSourceSheet();
+  
+  // Get data from the configured data source sheet
+  const formSheet = ss.getSheetByName(dataSheetName);
   if (!formSheet) {
-    Logger.log("Error: Form Responses 1 sheet not found");
+    Logger.log(`Error: Data sheet "${dataSheetName}" not found`);
     return startRow + 8; // Return some rows down to avoid errors
   }
   
@@ -38,7 +41,7 @@ function createKPITiles(startRow) {
     header.includes("scale of 1 to 5"));
   
   if (timestampCol === -1 || ratingCol === -1) {
-    Logger.log("Error: Required columns not found in form responses");
+    Logger.log(`Error: Required columns not found in "${dataSheetName}" sheet`);
     return startRow + 8;
   }
   
@@ -154,15 +157,12 @@ function createKPITiles(startRow) {
     // Set the title
     formatKpiTitle(sheet, startRow, tile.column, tile.title);
     
-    // Set the main value
-    formatKpiValue(sheet, startRow + 1, tile.column, tile.value);
-    
-    // Set the change indicator (reverse colors for negative metrics)
-    formatKpiChange(sheet, startRow + 2, tile.column, tile.change, 
-                   tile.title === "% Negative Cases");
+    // Set the main value with change indicator
+    formatKpiValueWithChange(sheet, startRow + 1, tile.column, tile.value, tile.change, 
+                           tile.title === "% Negative Cases");
     
     // Set the subtitle
-    formatKpiSubtitle(sheet, startRow + 3, tile.column, tile.subtitle);
+    formatKpiSubtitle(sheet, startRow + 2, tile.column, tile.subtitle);
     
     // Apply special formatting for Average Rating
     if (tile.title === "Average Rating") {
