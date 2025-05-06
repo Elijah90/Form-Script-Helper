@@ -57,7 +57,7 @@ function setDataSourceSheet(sheetName) {
   const dashSheet = ss.getSheetByName("DailyDash");
   if (dashSheet) {
     try {
-      dashSheet.getRange("B11").setValue(sheetName);
+      dashSheet.getRange("P2").setValue(sheetName);
     } catch (e) {
       // Ignore error if the cell doesn't exist yet
     }
@@ -132,26 +132,33 @@ function getAvailableDataSheets() {
 }
 
 /**
- * Adds dashboard control elements to specific positions as requested
+ * Adds dashboard control elements to specific positions:
+ * - O1: Dashboard Settings label
+ * - O2: Data Source label
+ * - P2: Data source dropdown
+ * 
  * This is called during dashboard refresh
  */
 function addDashboardControls() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const dashSheet = ss.getSheetByName("DailyDash");
+  const dashSheet = ss.getSheetByName('DailyDash');
   if (!dashSheet) return;
   
   // Get the current data source
   const currentSource = getDataSourceSheet();
   
   // Clear any existing control areas
-  dashSheet.getRange("A10:E12").clear();
+  dashSheet.getRange("O1:R3").clear();
+  
+  // Match the background color of the controls area with dashboard background
+  dashSheet.getRange("O1:R3").setBackground("#f8f9fa");
   
   // Set up "Dashboard Settings" header
-  dashSheet.getRange("A10").setValue("Dashboard Settings");
-  dashSheet.getRange("A10").setFontWeight("bold");
+  dashSheet.getRange("O1").setValue("Dashboard Settings");
+  dashSheet.getRange("O1").setFontWeight("bold");
   
   // Set up "Data Source:" label
-  dashSheet.getRange("A11").setValue("Data Source:");
+  dashSheet.getRange("O2").setValue("Data Source:");
   
   // Set up dropdown with data validation
   const availableSheets = getAvailableDataSheets();
@@ -160,20 +167,13 @@ function addDashboardControls() {
       .requireValueInList(availableSheets, true)
       .build();
       
-    const dropdownCell = dashSheet.getRange("B11");
+    const dropdownCell = dashSheet.getRange("P2");
     dropdownCell.setValue(currentSource);
     dropdownCell.setDataValidation(validation);
-    dropdownCell.setNote("Select the sheet containing form response data");
+    dropdownCell.setNote("Select data source and press Refresh button again to load data");
   }
   
-  // Set up refresh button
-  dashSheet.getRange("D11").setValue("Refresh Dashboard");
-  dashSheet.getRange("D11").setFontColor("blue");
-  dashSheet.getRange("D11").setFontWeight("bold");
-  dashSheet.getRange("D11").setNote("Click this cell and press Ctrl+Enter to refresh");
-  
-  // Add a small spacing
-  dashSheet.setRowHeight(12, 15);
+  // Note: Intentionally not adding anything to R2 cell
 }
 
 /**
@@ -185,7 +185,7 @@ function onDataSourceChange() {
   const dashSheet = ss.getSheetByName("DailyDash");
   
   // Get the dropdown value
-  const dropdownValue = dashSheet.getRange("B11").getValue();
+  const dropdownValue = dashSheet.getRange("P2").getValue();
   
   if (dropdownValue && dropdownValue !== getDataSourceSheet()) {
     setDataSourceSheet(dropdownValue);
@@ -203,10 +203,24 @@ function onDataSourceChange() {
  */
 function installDataSourceChangeTrigger() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
+  
+  // Remove any existing triggers to avoid duplicates
+  const triggers = ScriptApp.getUserTriggers(ss);
+  for (const trigger of triggers) {
+    if (trigger.getHandlerFunction() === 'onEditTrigger') {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  }
+  
+  // Create a new trigger
   ScriptApp.newTrigger('onEditTrigger')
     .forSpreadsheet(ss)
     .onEdit()
     .create();
+    
+  // Show confirmation
+  SpreadsheetApp.getActiveSpreadsheet()
+    .toast("Data source change trigger installed successfully", "Setup Complete", 3);
 }
 
 /**
@@ -219,8 +233,8 @@ function onEditTrigger(e) {
   
   // Check if the edit was in the data source dropdown
   if (sheet.getName() === "DailyDash" && 
-      range.getRow() === 11 && 
-      range.getColumn() === 2) {
+      range.getRow() === 2 && 
+      range.getColumn() === 16) { // Column P is 16
     onDataSourceChange();
   }
 }
@@ -237,7 +251,10 @@ function testConfigModule() {
   Logger.log("Available data sheets:");
   Logger.log(availableSheets);
   
-  // Test adding controls to the dashboard
+  // Test adding controls to the dashboard at the new location
   addDashboardControls();
-  Logger.log("Added dashboard controls");
+  Logger.log("Added dashboard controls at O1:R3");
+  
+  // Install the trigger if needed
+  installDataSourceChangeTrigger();
 }

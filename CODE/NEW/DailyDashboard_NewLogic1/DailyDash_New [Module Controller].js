@@ -15,8 +15,25 @@ function refreshDashboard() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName('DailyDash');
   
+  // First, ensure the data source dropdown is created
+  addDashboardControls();
+  
+  // Check if this is the first press (creating dropdown) or second press (loading data)
+  const dataSourceCell = sheet.getRange("P2");
+  const dataSourceValue = dataSourceCell.getValue();
+  
+  // If data source is blank or missing, this must be the first run
+  // Just create the dropdown and notify the user
+  if (!dataSourceValue) {
+    ss.toast("Data source selector created. Please select a data source and press Refresh again to load data.", 
+             "Step 1 of 2", 5);
+    return;
+  }
+  
+  // At this point, we have a data source selected, so we can proceed with the actual refresh
+  
   // Start refresh process
-  Logger.log("Starting dashboard refresh...");
+  Logger.log("Starting dashboard refresh with data source: " + dataSourceValue);
   
   try {
     // Create header and get the next row
@@ -66,15 +83,14 @@ function refreshDashboard() {
     }
     
     // Show a toast notification
-    ss.toast("Dashboard refreshed successfully!", "Refresh Complete", 3);
+    ss.toast("Dashboard refreshed successfully using data from: " + dataSourceValue,
+             "Refresh Complete", 3);
     Logger.log("Dashboard refresh completed successfully.");
   } catch (error) {
     // Log any errors
     Logger.log("Error refreshing dashboard: " + error.message);
     ss.toast("Error refreshing dashboard: " + error.message, "Refresh Error", 5);
-  };
-
-  addDashboardControls(); // Add controls at fixed positions
+  }
 }
 
 /**
