@@ -57,9 +57,15 @@ function createKPITiles(startRow) {
         )
       );
     }
+
+    // Last resort: Check the last column (often contains rating in form responses)
+    if (ratingCol === -1) {
+      ratingCol = headers.length - 1;
+      Logger.log("Warning: Using last column as rating column");
+    }
     
-    if (timestampCol === -1 || ratingCol === -1) {
-      Logger.log(`Error: Required columns not found in "${dataSheetName}" sheet`);
+    if (timestampCol === -1) {
+      Logger.log(`Error: Timestamp column not found in "${dataSheetName}" sheet`);
       createEmptyKPITiles(sheet, startRow);
       return startRow + 7;
     }
@@ -168,10 +174,10 @@ function createKPITiles(startRow) {
       }
     ];
     
-    // Create each KPI tile separately to avoid cascading failures
+    // Create each KPI tile with simpler direct approach
     for (let i = 0; i < kpiTiles.length; i++) {
       try {
-        createSingleKPITile(sheet, startRow, kpiTiles[i]);
+        createSimpleKPITile(sheet, startRow, kpiTiles[i]);
       } catch (tileError) {
         Logger.log(`Error creating KPI tile ${kpiTiles[i].title}: ${tileError.message}`);
         // Continue with other tiles even if one fails
@@ -191,33 +197,34 @@ function createKPITiles(startRow) {
 }
 
 /**
- * Creates a single KPI tile
+ * Creates a single KPI tile with a simpler approach that avoids rich text formatting
  * @param {Sheet} sheet - The dashboard sheet
  * @param {number} startRow - The starting row
  * @param {Object} tileConfig - The tile configuration object
  */
-function createSingleKPITile(sheet, startRow, tileConfig) {
+function createSimpleKPITile(sheet, startRow, tileConfig) {
   // Format the tile container
   formatTile(sheet.getRange(startRow, tileConfig.column, 5, 1));
   
   // Set the title
-  formatKpiTitle(sheet, startRow, tileConfig.column, tileConfig.title);
+  sheet.getRange(startRow, tileConfig.column)
+       .setValue(tileConfig.title)
+       .setFontSize(14)
+       .setFontColor("#666666")
+       .setVerticalAlignment("middle")
+       .setHorizontalAlignment("left");
   
-  // Set the main value with change indicator
-  if (typeof formatKpiValueWithChange === 'function') {
-    formatKpiValueWithChange(
-      sheet, 
-      startRow + 1, 
-      tileConfig.column, 
-      tileConfig.value, 
-      tileConfig.change, 
-      tileConfig.title === "% Negative Cases"
-    );
-  } else {
-    // Fallback if the rich text function is not available
-    formatKpiValue(sheet, startRow + 1, tileConfig.column, tileConfig.value);
-    
-    // Set change indicator below if we can't do it inline
+  // Set the main value directly - avoiding complex formatted functions
+  sheet.getRange(startRow + 1, tileConfig.column)
+       .setValue(tileConfig.value)
+       .setFontSize(36)
+       .setFontWeight("bold")
+       .setFontColor("#333333")
+       .setVerticalAlignment("middle")
+       .setHorizontalAlignment("left");
+  
+  // Set change indicator as separate cell
+  if (tileConfig.change !== 0) {
     let changeText = "";
     let changeColor = "#666666";
     
@@ -229,21 +236,39 @@ function createSingleKPITile(sheet, startRow, tileConfig) {
       changeColor = tileConfig.title === "% Negative Cases" ? "#4CAF50" : "#F44336";
     }
     
-    if (changeText) {
-      sheet.getRange(startRow + 2, tileConfig.column)
-           .setValue(changeText)
-           .setFontSize(14)
-           .setFontColor(changeColor)
-           .setHorizontalAlignment("left");
-    }
+    sheet.getRange(startRow + 2, tileConfig.column)
+         .setValue(changeText)
+         .setFontSize(14)
+         .setFontColor(changeColor)
+         .setHorizontalAlignment("left");
   }
   
   // Set the subtitle
-  formatKpiSubtitle(sheet, startRow + 3, tileConfig.column, tileConfig.subtitle);
+  sheet.getRange(startRow + 3, tileConfig.column)
+       .setValue(tileConfig.subtitle)
+       .setFontSize(12)
+       .setFontColor("#666666")
+       .setVerticalAlignment("top")
+       .setHorizontalAlignment("left");
   
-  // Apply special formatting for Average Rating
+  // Apply special formatting for Average Rating if needed
   if (tileConfig.title === "Average Rating") {
-    formatRatingColorBar(sheet, startRow + 4, tileConfig.column, parseFloat(tileConfig.value));
+    const ratingValue = parseFloat(tileConfig.value);
+    
+    if (!isNaN(ratingValue)) {
+      let backgroundColor = "#f8f9fa";
+      
+      if (ratingValue >= 4.5) {
+        backgroundColor = "#4CAF50"; // Good (green)
+      } else if (ratingValue >= 3.5) {
+        backgroundColor = "#FFEB3B"; // Satisfactory (yellow)
+      } else if (ratingValue > 0) {
+        backgroundColor = "#F44336"; // Poor (red)
+      }
+      
+      sheet.getRange(startRow + 4, tileConfig.column)
+           .setBackground(backgroundColor);
+    }
   }
 }
 
@@ -290,19 +315,9 @@ function createEmptyKPITiles(sheet, startRow) {
     }
   ];
   
-  // Create each KPI tile
+  // Create each KPI tile using the simpler approach
   kpiTiles.forEach(tile => {
-    // Format the tile container
-    formatTile(sheet.getRange(startRow, tile.column, 5, 1));
-    
-    // Set the title
-    formatKpiTitle(sheet, startRow, tile.column, tile.title);
-    
-    // Set the value
-    formatKpiValue(sheet, startRow + 1, tile.column, tile.value);
-    
-    // Set the subtitle
-    formatKpiSubtitle(sheet, startRow + 3, tile.column, tile.subtitle);
+    createSimpleKPITile(sheet, startRow, tile);
   });
   
   // Add spacing after KPI section
