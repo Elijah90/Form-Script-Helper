@@ -36,9 +36,26 @@ function getDashboardConfig() {
 
 /**
  * Gets the current data source sheet name
+ * This prioritizes the dropdown selection if it exists, otherwise falls back to config
  * @return {string} The name of the data source sheet
  */
 function getDataSourceSheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const dashSheet = ss.getSheetByName("DailyDash");
+  
+  // First, try to get the value from the dropdown (if it exists)
+  if (dashSheet) {
+    try {
+      const dropdownValue = dashSheet.getRange("P2").getValue();
+      if (dropdownValue && typeof dropdownValue === 'string' && dropdownValue.trim() !== '') {
+        return dropdownValue;
+      }
+    } catch (e) {
+      // Ignore errors if the cell doesn't exist yet
+    }
+  }
+  
+  // If dropdown doesn't exist or has no value, fall back to stored config
   return getDashboardConfig().dataSheet;
 }
 
@@ -50,6 +67,12 @@ function setDataSourceSheet(sheetName) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const configSheet = getOrCreateConfigSheet(ss);
   
+  // Validate sheet name exists
+  if (!ss.getSheetByName(sheetName)) {
+    Logger.log(`Warning: Sheet "${sheetName}" not found`);
+    return;
+  }
+  
   // Update the data source in the config sheet
   configSheet.getRange("B2").setValue(sheetName);
   
@@ -57,9 +80,10 @@ function setDataSourceSheet(sheetName) {
   const dashSheet = ss.getSheetByName("DailyDash");
   if (dashSheet) {
     try {
-      dashSheet.getRange("P2").setValue(sheetName);
+      const dropdownCell = dashSheet.getRange("P2");
+      dropdownCell.setValue(sheetName);
     } catch (e) {
-      // Ignore error if the cell doesn't exist yet
+      Logger.log("Could not update dropdown: " + e.message);
     }
   }
   
@@ -137,15 +161,25 @@ function getAvailableDataSheets() {
  * - O2: Data Source label
  * - P2: Data source dropdown
  * 
- * This is called during dashboard refresh
+ * This preserves any existing selection when refreshing.
  */
 function addDashboardControls() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const dashSheet = ss.getSheetByName('DailyDash');
+  const dashSheet = ss.getSheetByName("DailyDash");
   if (!dashSheet) return;
   
-  // Get the current data source
-  const currentSource = getDataSourceSheet();
+  // First, check if dropdown already exists and has a value
+  let currentSource = "";
+  try {
+    currentSource = dashSheet.getRange("P2").getValue();
+  } catch (e) {
+    // If cell doesn't exist, ignore error
+  }
+  
+  // If dropdown doesn't have a value, use the config value
+  if (!currentSource) {
+    currentSource = getDashboardConfig().dataSheet;
+  }
   
   // Clear any existing control areas
   dashSheet.getRange("O1:R3").clear();
@@ -170,91 +204,29 @@ function addDashboardControls() {
     const dropdownCell = dashSheet.getRange("P2");
     dropdownCell.setValue(currentSource);
     dropdownCell.setDataValidation(validation);
-    dropdownCell.setNote("Select data source and press Refresh button again to load data");
+    
+    // Note in cell comment
+    dropdownCell.setNote("Data source for dashboard. Changes take effect next refresh.");
   }
-  
-  // Note: Intentionally not adding anything to R2 cell
 }
 
 /**
- * Function to handle changes to the data source dropdown
- * This can be triggered by an edit event
+ * Checks if the dashboard controls exist and are properly set up
+ * @return {boolean} True if controls exist
  */
-function onDataSourceChange() {
+function dashboardControlsExist() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const dashSheet = ss.getSheetByName("DailyDash");
   
-  // Get the dropdown value
-  const dropdownValue = dashSheet.getRange("P2").getValue();
+  if (!dashSheet) return false;
   
-  if (dropdownValue && dropdownValue !== getDataSourceSheet()) {
-    setDataSourceSheet(dropdownValue);
+  try {
+    // Check if key elements exist
+    const hasSettings = dashSheet.getRange("O1").getValue() === "Dashboard Settings";
+    const hasDropdown = dashSheet.getRange("P2").getDataValidation() !== null;
     
-    // Trigger a dashboard refresh
-    if (typeof refreshDashboard === 'function') {
-      refreshDashboard();
-    }
+    return hasSettings && hasDropdown;
+  } catch (e) {
+    return false;
   }
-}
-
-/**
- * Installs an onEdit trigger to detect changes to the data source dropdown
- * Call this once to set up the trigger
- */
-function installDataSourceChangeTrigger() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  
-  // Remove any existing triggers to avoid duplicates
-  const triggers = ScriptApp.getUserTriggers(ss);
-  for (const trigger of triggers) {
-    if (trigger.getHandlerFunction() === 'onEditTrigger') {
-      ScriptApp.deleteTrigger(trigger);
-    }
-  }
-  
-  // Create a new trigger
-  ScriptApp.newTrigger('onEditTrigger')
-    .forSpreadsheet(ss)
-    .onEdit()
-    .create();
-    
-  // Show confirmation
-  SpreadsheetApp.getActiveSpreadsheet()
-    .toast("Data source change trigger installed successfully", "Setup Complete", 3);
-}
-
-/**
- * Handles edit events in the spreadsheet
- * @param {Object} e - The edit event object
- */
-function onEditTrigger(e) {
-  const sheet = e.source.getActiveSheet();
-  const range = e.range;
-  
-  // Check if the edit was in the data source dropdown
-  if (sheet.getName() === "DailyDash" && 
-      range.getRow() === 2 && 
-      range.getColumn() === 16) { // Column P is 16
-    onDataSourceChange();
-  }
-}
-
-/**
- * Test function for the configuration module
- */
-function testConfigModule() {
-  const config = getDashboardConfig();
-  Logger.log("Current configuration:");
-  Logger.log(JSON.stringify(config));
-  
-  const availableSheets = getAvailableDataSheets();
-  Logger.log("Available data sheets:");
-  Logger.log(availableSheets);
-  
-  // Test adding controls to the dashboard at the new location
-  addDashboardControls();
-  Logger.log("Added dashboard controls at O1:R3");
-  
-  // Install the trigger if needed
-  installDataSourceChangeTrigger();
 }

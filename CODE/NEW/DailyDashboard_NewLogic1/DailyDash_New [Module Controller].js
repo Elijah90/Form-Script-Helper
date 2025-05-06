@@ -15,27 +15,35 @@ function refreshDashboard() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName('DailyDash');
   
-  // First, ensure the data source dropdown is created
-  addDashboardControls();
-  
-  // Check if this is the first press (creating dropdown) or second press (loading data)
-  const dataSourceCell = sheet.getRange("P2");
-  const dataSourceValue = dataSourceCell.getValue();
-  
-  // If data source is blank or missing, this must be the first run
-  // Just create the dropdown and notify the user
-  if (!dataSourceValue) {
-    ss.toast("Data source selector created. Please select a data source and press Refresh again to load data.", 
-             "Step 1 of 2", 5);
+  // Always ensure dashboard controls exist
+  if (!dashboardControlsExist()) {
+    addDashboardControls();
+    ss.toast("Dashboard controls have been set up. Select your data source and press Refresh again.", 
+             "Setup Complete", 5);
     return;
   }
   
-  // At this point, we have a data source selected, so we can proceed with the actual refresh
+  // Get the selected data source
+  const dataSource = getDataSourceSheet();
+  if (!dataSource) {
+    ss.toast("Please select a data source from the dropdown first", "Data Source Required", 3);
+    return;
+  }
+  
+  // Validate the selected sheet exists
+  if (!ss.getSheetByName(dataSource)) {
+    ss.toast(`Selected data sheet "${dataSource}" not found. Please select a valid sheet.`, 
+             "Invalid Data Source", 5);
+    return;
+  }
   
   // Start refresh process
-  Logger.log("Starting dashboard refresh with data source: " + dataSourceValue);
+  Logger.log("Starting dashboard refresh with data source: " + dataSource);
   
   try {
+    // Update the config to match the dropdown (synchronize both)
+    setDataSourceSheet(dataSource);
+    
     // Create header and get the next row
     let nextRow = createDashboardHeader();
     Logger.log("Header refreshed. Next row: " + nextRow);
@@ -82,14 +90,20 @@ function refreshDashboard() {
       Logger.log("Dashboard footer added.");
     }
     
+    // Ensure controls are restored after refresh
+    addDashboardControls();
+    
     // Show a toast notification
-    ss.toast("Dashboard refreshed successfully using data from: " + dataSourceValue,
+    ss.toast(`Dashboard refreshed successfully using data from: ${dataSource}`,
              "Refresh Complete", 3);
     Logger.log("Dashboard refresh completed successfully.");
   } catch (error) {
     // Log any errors
     Logger.log("Error refreshing dashboard: " + error.message);
     ss.toast("Error refreshing dashboard: " + error.message, "Refresh Error", 5);
+    
+    // Ensure controls are restored even if there's an error
+    addDashboardControls();
   }
 }
 
@@ -103,7 +117,8 @@ function onOpen() {
   // Create a custom menu
   ss.addMenu("Dashboard", [
     {name: "Refresh Now", functionName: "refreshDashboard"},
-    {name: "Clear All", functionName: "clearDashboard"}
+    {name: "Clear All", functionName: "clearDashboard"},
+    {name: "Setup Controls", functionName: "addDashboardControls"}
   ]);
   
   // Show a welcome message
@@ -156,6 +171,9 @@ function initializeDashboard() {
   // Set background color for the whole sheet
   sheet.getRange(1, 1, sheet.getMaxRows(), sheet.getMaxColumns())
        .setBackground("#f8f9fa");
+  
+  // Ensure dashboard controls exist
+  addDashboardControls();
   
   // Run the refresh dashboard function
   refreshDashboard();
