@@ -14,7 +14,7 @@ function createKPITiles(startRow) {
   const formSheet = ss.getSheetByName('Form Responses 1');
   if (!formSheet) {
     Logger.log("Error: Form Responses 1 sheet not found");
-    return startRow + 10; // Return some rows down to avoid errors
+    return startRow + 8; // Return some rows down to avoid errors
   }
   
   // Get today's and yesterday's dates
@@ -32,11 +32,14 @@ function createKPITiles(startRow) {
   
   // Find important column indexes
   const timestampCol = headers.indexOf("Timestamp");
-  const ratingCol = headers.findIndex(header => header.includes("rate our services") || header.includes("1 to 5 stars"));
+  const ratingCol = headers.findIndex(header => 
+    header.includes("rate our services") || 
+    header.includes("1 to 5 stars") || 
+    header.includes("scale of 1 to 5"));
   
   if (timestampCol === -1 || ratingCol === -1) {
     Logger.log("Error: Required columns not found in form responses");
-    return startRow + 10;
+    return startRow + 8;
   }
   
   // Count submissions and calculate metrics
@@ -106,114 +109,81 @@ function createKPITiles(startRow) {
   const fiveStarPercentage = todaySubmissions > 0 ? 
     Math.round((todayFiveStars / todaySubmissions) * 100) : 0;
   
-  // Set up grid for the KPI tiles
-  const kpiRow = startRow;
-  const kpiHeight = 5; // Height of each KPI tile in rows
+  // Clear the KPI area and set up layout
+  clearSectionArea(sheet, startRow, 7, 15);
+  setDashboardColumnWidths(sheet);
+  setKpiRowHeights(sheet, startRow);
   
-  // Clear the KPI area
-  sheet.getRange(kpiRow, 1, kpiHeight, 10).clearContent();
-  
-  // Configure KPI tiles
-  
-  // Define KPI structure (position, title, main value, change value, subtitle)
-  const kpis = [
+  // Define KPI tiles configuration
+  const kpiTiles = [
     {
       title: "Submissions Today",
       value: todaySubmissions,
       change: submissionChange,
       subtitle: "vs. yesterday",
-      column: 1 // Column A
+      column: 1  // Column A
     },
     {
       title: "Average Rating",
       value: todayAvgRating.toFixed(1),
       change: avgRatingChange.toFixed(1),
       subtitle: "(out of 5.0)",
-      column: 3 // Column C
+      column: 3  // Column C
     },
     {
       title: "5-Star Ratings",
       value: todayFiveStars,
       change: fiveStarChange,
-      subtitle: `${fiveStarPercentage}% of total`,
-      column: 5 // Column E
+      subtitle: fiveStarPercentage + "% of total",
+      column: 5  // Column E
     },
     {
       title: "% Negative Cases",
-      value: `${todayNegativePercentage}%`,
+      value: todayNegativePercentage + "%",
       change: negativePercentageChange,
-      subtitle: `Action needed: ${todayNegatives} cases`,
-      column: 7 // Column G
+      subtitle: "Action needed: " + todayNegatives + " cases",
+      column: 7  // Column G
     }
   ];
   
-  // Create each KPI tile
-  kpis.forEach(kpi => {
-    // Create border around KPI tile
-    const tileRange = sheet.getRange(kpiRow, kpi.column, kpiHeight, 2);
+  // Create each KPI tile using the layout utilities
+  kpiTiles.forEach(tile => {
+    // Format the tile container
+    formatTile(sheet.getRange(startRow, tile.column, 5, 1));
     
-    // Set KPI title
-    sheet.getRange(kpiRow, kpi.column, 1, 2).merge();
-    sheet.getRange(kpiRow, kpi.column)
-      .setValue(kpi.title)
-      .setFontSize(14)
-      .setFontColor("#666666");
+    // Set the title
+    formatKpiTitle(sheet, startRow, tile.column, tile.title);
     
-    // Set KPI value
-    sheet.getRange(kpiRow + 1, kpi.column)
-      .setValue(kpi.value)
-      .setFontSize(36)
-      .setFontWeight("bold")
-      .setFontColor("#333333");
+    // Set the main value
+    formatKpiValue(sheet, startRow + 1, tile.column, tile.value);
     
-    // Set change indicator
-    const changeCell = sheet.getRange(kpiRow + 1, kpi.column + 1);
-    const changeValue = kpi.change;
-    const changeSymbol = changeValue > 0 ? "▲" : (changeValue < 0 ? "▼" : "");
-    const changeColor = (kpi.title === "% Negative Cases") ? 
-      (changeValue > 0 ? "#F44336" : changeValue < 0 ? "#4CAF50" : "#666666") : 
-      (changeValue > 0 ? "#4CAF50" : changeValue < 0 ? "#F44336" : "#666666");
+    // Set the change indicator (reverse colors for negative metrics)
+    formatKpiChange(sheet, startRow + 2, tile.column, tile.change, 
+                   tile.title === "% Negative Cases");
     
-    changeCell
-      .setValue(`${changeSymbol} ${Math.abs(changeValue)}`)
-      .setFontSize(14)
-      .setFontColor(changeColor);
+    // Set the subtitle
+    formatKpiSubtitle(sheet, startRow + 3, tile.column, tile.subtitle);
     
-    // Set subtitle
-    sheet.getRange(kpiRow + 2, kpi.column, 1, 2)
-      .merge()
-      .setValue(kpi.subtitle)
-      .setFontSize(12)
-      .setFontColor("#666666");
-    
-    // Apply conditional formatting for Rating KPI background
-    if (kpi.title === "Average Rating") {
-      const ratingValue = parseFloat(kpi.value);
-      const backgroundColor = ratingValue >= 4.5 ? "#4CAF50" : 
-                             ratingValue >= 3.5 ? "#FFEB3B" : "#F44336";
-      
-      sheet.getRange(kpiRow + 1, kpi.column, 1, 2)
-        .merge()
-        .setBackground(backgroundColor);
+    // Apply special formatting for Average Rating
+    if (tile.title === "Average Rating") {
+      formatRatingColorBar(sheet, startRow + 4, tile.column, parseFloat(tile.value));
     }
-    
-    // Add border to KPI tile
-    tileRange
-      .setBorder(true, true, true, true, false, false)
-      .setBackground("white");
   });
   
-  // Add spacing after KPI tiles
-  sheet.setRowHeight(kpiRow + kpiHeight, 15);
+  // Add spacing after KPI section
+  addSectionSpacing(sheet, startRow + 6);
   
   // Return the next available row
-  return kpiRow + kpiHeight + 1;
+  return startRow + 7;
 }
 
 /**
  * Test function to verify the KPI section works correctly
  */
 function testKPITilesSection() {
+  // Format background first
+  formatDashboardBackground();
+  
   // Create header and get the next row
   const startRow = createDashboardHeader();
   
