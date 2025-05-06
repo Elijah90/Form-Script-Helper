@@ -474,8 +474,17 @@ function writeLowAlertsDynamic(sheet, lows, startRow) {
       });
     }
     
-    // Format email to show in a more readable format with rep name
-    const formattedEmail = r.email ? `${r.email}` : '-';
+    // Extract clean email from potential markdown format [xxx](mailto:xxx)
+    let cleanEmail = r.email;
+    if (cleanEmail) {
+      // Check if email is in markdown format [xxx](mailto:xxx) and extract just the email
+      const markdownMatch = cleanEmail.match(/\[(.*?)\]\(mailto:(.*?)\)/);
+      if (markdownMatch) {
+        // Use the email part (either from the display text or the actual mailto)
+        cleanEmail = markdownMatch[1] || markdownMatch[2];
+      }
+    }
+    const formattedEmail = cleanEmail || '-';
     
     // Format values to show '-' for zero or empty values
     const starsValue = (r.stars === 0 || r.stars === '') ? '-' : r.stars;
