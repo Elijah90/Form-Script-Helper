@@ -31,9 +31,6 @@ function getDashboardConfig() {
     config.dataSheet = dataSource;
   }
   
-  // Read other configuration settings as needed
-  // (can be expanded as more settings are added)
-  
   return config;
 }
 
@@ -56,6 +53,16 @@ function setDataSourceSheet(sheetName) {
   // Update the data source in the config sheet
   configSheet.getRange("B2").setValue(sheetName);
   
+  // Also update the dropdown in the dashboard if it exists
+  const dashSheet = ss.getSheetByName("DailyDash");
+  if (dashSheet) {
+    try {
+      dashSheet.getRange("B11").setValue(sheetName);
+    } catch (e) {
+      // Ignore error if the cell doesn't exist yet
+    }
+  }
+  
   // Show a confirmation
   ss.toast(`Data source changed to "${sheetName}"`, "Configuration Updated", 3);
 }
@@ -73,7 +80,7 @@ function getOrCreateConfigSheet(ss) {
   if (!configSheet) {
     configSheet = ss.insertSheet("DashConfig");
     initializeConfigSheet(configSheet);
-    // Hide the config sheet (optional)
+    // Hide the config sheet
     configSheet.hideSheet();
   }
   
@@ -103,8 +110,6 @@ function initializeConfigSheet(sheet) {
     sheet.getRange("B2").setDataValidation(validation);
   }
   
-  // Add other configuration settings here as needed
-  
   // Format the sheet
   sheet.autoResizeColumns(1, 2);
 }
@@ -127,45 +132,59 @@ function getAvailableDataSheets() {
 }
 
 /**
- * Creates a data source selector dropdown directly in the dashboard
- * @param {Sheet} dashSheet - The dashboard sheet
- * @param {number} row - The row to place the selector
- * @param {number} col - The column to place the selector
+ * Adds dashboard control elements to specific positions as requested
+ * This is called during dashboard refresh
  */
-function createDataSourceSelector(dashSheet, row, col) {
-  // Set up label
-  dashSheet.getRange(row, col).setValue("Data Source:");
-  dashSheet.getRange(row, col).setFontWeight("bold");
+function addDashboardControls() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const dashSheet = ss.getSheetByName("DailyDash");
+  if (!dashSheet) return;
   
-  // Set up dropdown
-  const availableSheets = getAvailableDataSheets();
+  // Get the current data source
   const currentSource = getDataSourceSheet();
   
-  // Create data validation for dropdown
+  // Clear any existing control areas
+  dashSheet.getRange("A10:E12").clear();
+  
+  // Set up "Dashboard Settings" header
+  dashSheet.getRange("A10").setValue("Dashboard Settings");
+  dashSheet.getRange("A10").setFontWeight("bold");
+  
+  // Set up "Data Source:" label
+  dashSheet.getRange("A11").setValue("Data Source:");
+  
+  // Set up dropdown with data validation
+  const availableSheets = getAvailableDataSheets();
   if (availableSheets.length > 0) {
     const validation = SpreadsheetApp.newDataValidation()
       .requireValueInList(availableSheets, true)
       .build();
       
-    const dropdownCell = dashSheet.getRange(row, col + 1);
+    const dropdownCell = dashSheet.getRange("B11");
     dropdownCell.setValue(currentSource);
     dropdownCell.setDataValidation(validation);
-    
-    // Add a note to explain
-    dropdownCell.setNote("Select the sheet containing form response data.\nChanging this will update dashboard data on next refresh.");
+    dropdownCell.setNote("Select the sheet containing form response data");
   }
+  
+  // Set up refresh button
+  dashSheet.getRange("D11").setValue("Refresh Dashboard");
+  dashSheet.getRange("D11").setFontColor("blue");
+  dashSheet.getRange("D11").setFontWeight("bold");
+  dashSheet.getRange("D11").setNote("Click this cell and press Ctrl+Enter to refresh");
+  
+  // Add a small spacing
+  dashSheet.setRowHeight(12, 15);
 }
 
 /**
  * Function to handle changes to the data source dropdown
- * This can be triggered by an edit event or button click
+ * This can be triggered by an edit event
  */
 function onDataSourceChange() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const dashSheet = ss.getSheetByName("DailyDash");
   
-  // Assuming the dropdown is at a specific location
-  // Update this to match where you place the dropdown
+  // Get the dropdown value
   const dropdownValue = dashSheet.getRange("B11").getValue();
   
   if (dropdownValue && dropdownValue !== getDataSourceSheet()) {
@@ -176,38 +195,6 @@ function onDataSourceChange() {
       refreshDashboard();
     }
   }
-}
-
-/**
- * Adds configuration controls to the dashboard
- * @param {number} startRow - The row to start the controls section
- * @return {number} - The next row after the controls section
- */
-function addDashboardControls(startRow) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const dashSheet = ss.getSheetByName("DailyDash");
-  
-  // Create a section for dashboard controls
-  dashSheet.getRange(startRow, 1, 1, 3).merge();
-  dashSheet.getRange(startRow, 1).setValue("Dashboard Settings");
-  dashSheet.getRange(startRow, 1).setFontWeight("bold");
-  
-  // Add data source selector
-  createDataSourceSelector(dashSheet, startRow + 1, 1);
-  
-  // Add other controls as needed
-  
-  // Add a refresh button using a drawing or a cell with a note
-  dashSheet.getRange(startRow + 1, 4).setValue("Refresh Dashboard");
-  dashSheet.getRange(startRow + 1, 4)
-    .setFontColor("blue")
-    .setFontWeight("bold")
-    .setNote("Click this cell and run the 'refreshDashboard' function to update the dashboard");
-  
-  // Add some spacing
-  dashSheet.setRowHeight(startRow + 3, 15);
-  
-  return startRow + 4;
 }
 
 /**
@@ -251,9 +238,6 @@ function testConfigModule() {
   Logger.log(availableSheets);
   
   // Test adding controls to the dashboard
-  const dashSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("DailyDash");
-  if (dashSheet) {
-    const nextRow = addDashboardControls(10);
-    Logger.log("Added controls to dashboard, next row: " + nextRow);
-  }
+  addDashboardControls();
+  Logger.log("Added dashboard controls");
 }
