@@ -25,16 +25,21 @@ const DASHBOARD_COLORS = {
  * @param {Sheet} sheet - The Google Sheet to format
  */
 function setDashboardColumnWidths(sheet) {
-  // Set column widths for better layout
-  sheet.setColumnWidth(1, 220); // A - First column (wider for longer titles)
-  sheet.setColumnWidth(2, 20);  // B - Spacer
-  sheet.setColumnWidth(3, 220); // C - Second column
-  sheet.setColumnWidth(4, 20);  // D - Spacer
-  sheet.setColumnWidth(5, 220); // E - Third column
-  sheet.setColumnWidth(6, 20);  // F - Spacer
-  sheet.setColumnWidth(7, 220); // G - Fourth column
-  sheet.setColumnWidth(8, 20);  // H - Spacer
-  sheet.setColumnWidth(9, 220); // I - Fifth column
+  // Set column widths for KPI tiles with proper width distribution
+  sheet.setColumnWidth(1, 170); // A - Main value column
+  sheet.setColumnWidth(2, 60);  // B - Change indicator column
+  sheet.setColumnWidth(3, 170); // C - Main value column
+  sheet.setColumnWidth(4, 60);  // D - Change indicator column
+  sheet.setColumnWidth(5, 170); // E - Main value column
+  sheet.setColumnWidth(6, 60);  // F - Change indicator column
+  sheet.setColumnWidth(7, 170); // G - Main value column 
+  sheet.setColumnWidth(8, 60);  // H - Change indicator column
+  
+  // Other columns for later sections
+  sheet.setColumnWidth(9, 300);  // I - For trend charts
+  sheet.setColumnWidth(10, 25);  // J - Spacer
+  sheet.setColumnWidth(15, 175); // O - Dashboard controls
+  sheet.setColumnWidth(16, 175); // P - Dashboard controls
 }
 
 /**
@@ -121,89 +126,6 @@ function formatKpiValue(sheet, row, column, value) {
 }
 
 /**
- * Creates a KPI value with change indicator on the same row
- * This avoids rich text formatting which can be problematic in Google Sheets
- * 
- * @param {Sheet} sheet - The Google Sheet
- * @param {number} row - The row for the main value
- * @param {number} column - The column for the main value
- * @param {number|string} value - The main KPI value
- * @param {number} change - The change value
- * @param {boolean} reverseColors - Whether to reverse the color logic (true for metrics where decreasing is good)
- */
-
-function createSimpleKPITile(sheet, startRow, tileConfig) {
-  // Format the tile container to span 2 columns
-  formatTile(sheet.getRange(startRow, tileConfig.column, 5, 2));
-  
-  // Set the title to span both columns
-  sheet.getRange(startRow, tileConfig.column, 1, 2)
-       .merge()
-       .setValue(tileConfig.title)
-       .setFontSize(14)
-       .setFontColor("#666666")
-       .setVerticalAlignment("middle")
-       .setHorizontalAlignment("left");
-  
-  // Set the main value with change indicator (each in its own column)
-  formatKpiValueWithChange(
-    sheet, 
-    startRow + 1, 
-    tileConfig.column, 
-    tileConfig.value, 
-    tileConfig.change, 
-    tileConfig.title === "% Negative Cases"
-  );
-  
-  // Set the subtitle to span both columns
-  sheet.getRange(startRow + 2, tileConfig.column, 1, 2)
-       .merge()
-       .setValue(tileConfig.subtitle)
-       .setFontSize(12)
-       .setFontColor("#666666")
-       .setVerticalAlignment("top")
-       .setHorizontalAlignment("left");
-  
-  // Apply yellow highlight bar for Average Rating only (spanning both columns)
-  if (tileConfig.title === "Average Rating") {
-    createYellowHighlightBar(sheet, startRow + 4, tileConfig.column);
-  }
-}
-
-// Also update the KPI tile configurations to use columns 1,3,5,7 instead of 1,2,3,4
-// In createKPITiles function, change the kpiTiles array:
-const kpiTiles = [
-  {
-    title: "Submissions Today",
-    value: todaySubmissions,
-    change: submissionChange,
-    subtitle: "vs. yesterday",
-    column: 1  // Column A
-  },
-  {
-    title: "Average Rating",
-    value: todayAvgRating.toFixed(1),
-    change: avgRatingChange,
-    subtitle: "(out of 5.0)",
-    column: 3  // Column C
-  },
-  {
-    title: "5-Star Ratings",
-    value: todayFiveStars,
-    change: fiveStarChange,
-    subtitle: fiveStarPercentage + "% of total",
-    column: 5  // Column E
-  },
-  {
-    title: "% Negative Cases",
-    value: todayNegativePercentage + "%",
-    change: negativePercentageChange,
-    subtitle: "Action needed: " + todayNegatives + " cases",
-    column: 7  // Column G
-  }
-];
-
-/**
  * Formats a subtitle for a KPI tile
  * @param {Sheet} sheet - The Google Sheet
  * @param {number} row - The row for the subtitle
@@ -226,8 +148,8 @@ function formatKpiSubtitle(sheet, row, column, subtitle) {
  * @param {number} column - The column for the highlight bar
  */
 function createYellowHighlightBar(sheet, row, column) {
-  // Always use yellow highlight regardless of rating value
-  sheet.getRange(row, column)
+  // Highlight spans both columns of the tile
+  sheet.getRange(row, column, 1, 2)
        .setBackground(DASHBOARD_COLORS.warning); // Yellow highlight
 }
 
@@ -421,6 +343,49 @@ function createSectionContainer(sheet, startRow, numRows, startCol, numCols, tit
     startCol: startCol,
     endCol: startCol + numCols - 1
   };
+}
+
+/**
+ * Formats a KPI value with change indicator on the same row
+ * @param {Sheet} sheet - The Google Sheet
+ * @param {number} row - The row for the main value
+ * @param {number} column - The column for the main value
+ * @param {any} value - The main KPI value
+ * @param {number} change - The change value
+ * @param {boolean} reverseColors - Whether to reverse the color logic
+ */
+function formatKpiValueWithChange(sheet, row, column, value, change, reverseColors = false) {
+  // Format the main value in the first column
+  sheet.getRange(row, column)
+       .setValue(value)
+       .setFontSize(36)
+       .setFontWeight("bold")
+       .setFontColor(DASHBOARD_COLORS.headerText)
+       .setVerticalAlignment("middle")
+       .setHorizontalAlignment("left");
+  
+  // If no change, we're done
+  if (change === 0) return;
+  
+  // Create the change indicator text
+  let changeText = "";
+  let changeColor = DASHBOARD_COLORS.subText;
+  
+  if (change > 0) {
+    changeText = "▲ " + Math.abs(change);
+    changeColor = reverseColors ? DASHBOARD_COLORS.negative : DASHBOARD_COLORS.positive;
+  } else if (change < 0) {
+    changeText = "▼ " + Math.abs(change);
+    changeColor = reverseColors ? DASHBOARD_COLORS.positive : DASHBOARD_COLORS.negative;
+  }
+  
+  // Add the change indicator in the column to the right
+  sheet.getRange(row, column + 1)
+       .setValue(changeText)
+       .setFontSize(14)
+       .setFontColor(changeColor)
+       .setVerticalAlignment("middle")
+       .setHorizontalAlignment("left");
 }
 
 /**
