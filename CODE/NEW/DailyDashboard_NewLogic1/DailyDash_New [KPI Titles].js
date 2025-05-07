@@ -143,36 +143,37 @@ function createKPITiles(startRow) {
     setKpiRowHeights(sheet, startRow);
     
     // Define KPI tiles configuration
-    const kpiTiles = [
-      {
-        title: "Submissions Today",
-        value: todaySubmissions,
-        change: submissionChange,
-        subtitle: "vs. yesterday",
-        column: 1  // Column A
-      },
-      {
-        title: "Average Rating",
-        value: todayAvgRating.toFixed(1),
-        change: avgRatingChange,
-        subtitle: "(out of 5.0)",
-        column: 3  // Column C
-      },
-      {
-        title: "5-Star Ratings",
-        value: todayFiveStars,
-        change: fiveStarChange,
-        subtitle: fiveStarPercentage + "% of total",
-        column: 5  // Column E
-      },
-      {
-        title: "% Negative Cases",
-        value: todayNegativePercentage + "%",
-        change: negativePercentageChange,
-        subtitle: "Action needed: " + todayNegatives + " cases",
-        column: 7  // Column G
-      }
-    ];
+    // Inside createKPITiles function, update the kpiTiles array:
+const kpiTiles = [
+  {
+    title: "Submissions Today",
+    value: todaySubmissions,
+    change: submissionChange,
+    subtitle: "vs. yesterday",
+    column: 1  // Column A
+  },
+  {
+    title: "Average Rating",
+    value: todayAvgRating.toFixed(1),
+    change: avgRatingChange,
+    subtitle: "(out of 5.0)",
+    column: 4  // Column D (was 3)
+  },
+  {
+    title: "5-Star Ratings",
+    value: todayFiveStars,
+    change: fiveStarChange,
+    subtitle: fiveStarPercentage + "% of total",
+    column: 7  // Column G (was 5)
+  },
+  {
+    title: "% Negative Cases",
+    value: todayNegativePercentage + "%",
+    change: negativePercentageChange,
+    subtitle: "Action needed: " + todayNegatives + " cases",
+    column: 10  // Column J (was 7)
+  }
+];
     
     // Create each KPI tile with simpler direct approach
     for (let i = 0; i < kpiTiles.length; i++) {
@@ -235,44 +236,12 @@ function createSimpleKPITile(sheet, startRow, tileConfig) {
        .setVerticalAlignment("top")
        .setHorizontalAlignment("left");
   
-  // Apply yellow highlight bar for Average Rating only (spanning both columns)
+  // Apply yellow highlight bar for Average Rating only but on the main value row
   if (tileConfig.title === "Average Rating") {
-    createYellowHighlightBar(sheet, startRow + 4, tileConfig.column);
+    // Apply to startRow + 1 (main value row) instead of startRow + 4
+    createYellowHighlightBar(sheet, startRow + 1, tileConfig.column);
   }
 }
-
-// Also update the KPI tile configurations to use columns 1,3,5,7 instead of 1,2,3,4
-// In createKPITiles function, change the kpiTiles array:
-const kpiTiles = [
-  {
-    title: "Submissions Today",
-    value: todaySubmissions,
-    change: submissionChange,
-    subtitle: "vs. yesterday",
-    column: 1  // Column A
-  },
-  {
-    title: "Average Rating",
-    value: todayAvgRating.toFixed(1),
-    change: avgRatingChange,
-    subtitle: "(out of 5.0)",
-    column: 3  // Column C
-  },
-  {
-    title: "5-Star Ratings",
-    value: todayFiveStars,
-    change: fiveStarChange,
-    subtitle: fiveStarPercentage + "% of total",
-    column: 5  // Column E
-  },
-  {
-    title: "% Negative Cases",
-    value: todayNegativePercentage + "%",
-    change: negativePercentageChange,
-    subtitle: "Action needed: " + todayNegatives + " cases",
-    column: 7  // Column G
-  }
-];
 
 /**
  * Creates empty KPI tiles when data cannot be loaded
