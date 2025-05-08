@@ -1,0 +1,161 @@
+Timestamp,Email Address,Who attended to you needs?,Has your need been met?,"You chose NO, Please share your feedback. (1)",Were you satisfied with the Rep's presentation?,"You chose NO, Please share your feedback. (2)",Did the information and product knowledge match your expectations?,"You chose NO, Please share your feedback. (3)",How would you rate our services on a scale of 1 to 5 stars?
+5/8/2025 9:15:10,[test1@gmail.com](mailto:test1@gmail.com),Jarviss,Yes,,Yes,,Others,,4
+5/8/2025 10:30:20,[test2@gmail.com](mailto:test2@gmail.com),Jarviss,Yes,,Others,N/A to my case.,Yes,,4
+5/8/2025 11:45:30,[test3@gmail.com](mailto:test3@gmail.com),Jarviss,Yes,,Yes,,Yes,,5
+5/8/2025 12:00:40,[test4@gmail.com](mailto:test4@gmail.com),Jarviss,Yes,,Yes,,Yes,,5
+5/8/2025 13:15:50,[test5@gmail.com](mailto:test5@gmail.com),Jarviss,Yes,,Yes,,Yes,,4
+5/7/2025 13:10:05,[test6@gmail.com](mailto:test6@gmail.com),Jarviss,Yes,,Yes,,Yes,,5
+5/7/2025 14:25:15,[test7@gmail.com](mailto:test7@gmail.com),Jarviss,Yes,,Yes,,Yes,,5
+5/7/2025 15:40:25,[test8@gmail.com](mailto:test8@gmail.com),Jarviss,Yes,,Yes,,Yes,,5
+5/7/2025 16:55:35,[test9@gmail.com](mailto:test9@gmail.com),Jarviss,Yes,,Yes,,Yes,,4
+5/7/2025 17:05:45,[test10@gmail.com](mailto:test10@gmail.com),Jarviss,Yes,,Yes,,Yes,,5
+5/8/2025 9:17:10,[test11@gmail.com](mailto:test11@gmail.com),Claude,No,Issue still unresolved despite follow-up.,Yes,,Yes,,1
+5/8/2025 10:32:20,[test12@gmail.com](mailto:test12@gmail.com),Claude,No,Resolution promised but not delivered.,Yes,,Yes,,1
+5/8/2025 11:47:30,[test13@gmail.com](mailto:test13@gmail.com),Claude,No,Still waiting for technical team to contact me.,Yes,,Yes,,2
+5/8/2025 12:02:40,[test14@gmail.com](mailto:test14@gmail.com),Claude,No,Replacement part unavailable.,Yes,,Yes,,1
+5/8/2025 13:17:50,[test15@gmail.com](mailto:test15@gmail.com),Claude,No,Need escalated but no update received.,Yes,,Yes,,2
+5/7/2025 13:12:05,[test16@gmail.com](mailto:test16@gmail.com),Claude,No,Issue still unresolved despite follow-up.,Yes,,Yes,,2
+5/7/2025 14:27:15,[test17@gmail.com](mailto:test17@gmail.com),Claude,No,Resolution promised but not delivered.,Yes,,Yes,,1
+5/7/2025 15:42:25,[test18@gmail.com](mailto:test18@gmail.com),Claude,No,Still waiting for technical team to contact me.,Yes,,Yes,,2
+5/7/2025 16:57:35,[test19@gmail.com](mailto:test19@gmail.com),Claude,No,Replacement part unavailable.,Yes,,Yes,,1
+5/7/2025 17:07:45,[test20@gmail.com](mailto:test20@gmail.com),Claude,No,Need escalated but no update received.,Yes,,Yes,,1
+5/8/2025 9:15:10,[test21@gmail.com](mailto:test21@gmail.com),Samuel-Scott,Yes,,No,Explanation unclear and rushed.,Yes,,2
+5/8/2025 10:30:20,[test22@gmail.com](mailto:test22@gmail.com),Samuel-Scott,Yes,,No,Slides unreadable on small screen.,Yes,,2
+5/8/2025 11:45:30,[test23@gmail.com](mailto:test23@gmail.com),Samuel-Scott,Yes,,No,Poor audio quality during call.,Yes,,3
+5/8/2025 12:00:40,[test24@gmail.com](mailto:test24@gmail.com),Samuel-Scott,Yes,,No,Rep spoke too quickly.,Yes,,2
+5/8/2025 13:15:50,[test25@gmail.com](mailto:test25@gmail.com),Samuel-Scott,Yes,,No,"Too much jargon, no visuals.",Yes,,3
+5/7/2025 13:10:05,[test26@gmail.com](mailto:test26@gmail.com),Samuel-Scott,Yes,,No,Explanation unclear and rushed.,Yes,,2
+5/7/2025 14:25:15,[test27@gmail.com](mailto:test27@gmail.com),Samuel-Scott,Yes,,No,Slides unreadable on small screen.,Yes,,3
+5/7/2025 15:40:25,[test28@gmail.com](mailto:test28@gmail.com),Samuel-Scott,Yes,,No,Poor audio quality during call.,Yes,,2
+5/7/2025 16:55:35,[test29@gmail.com](mailto:test29@gmail.com),Samuel-Scott,Yes,,No,Rep spoke too quickly.,Yes,,2
+5/7/2025 17:05:45,[test30@gmail.com](mailto:test30@gmail.com),Samuel-Scott,Yes,,No,"Too much jargon, no visuals.",Yes,,3
+5/8/2025 9:15:10,[test31@gmail.com](mailto:test31@gmail.com),Christian,Yes,,Yes,,No,Delivery date too late for project.,1
+5/8/2025 10:30:20,[test32@gmail.com](mailto:test32@gmail.com),Christian,Yes,,Yes,,No,Specs did not match brochure.,2
+5/8/2025 11:45:30,[test33@gmail.com](mailto:test33@gmail.com),Christian,Yes,,Yes,,No,Colour variant out of stock.,1
+5/8/2025 12:00:40,[test34@gmail.com](mailto:test34@gmail.com),Christian,Yes,,Yes,,No,Pricing changed after quote.,2
+5/8/2025 13:15:50,[test35@gmail.com](mailto:test35@gmail.com),Christian,Yes,,Yes,,No,Warranty terms vague.,1
+5/7/2025 13:10:05,[test36@gmail.com](mailto:test36@gmail.com),Christian,Yes,,Yes,,No,Delivery date too late for project.,2
+5/7/2025 14:25:15,[test37@gmail.com](mailto:test37@gmail.com),Christian,Yes,,Yes,,No,Specs did not match brochure.,2
+5/7/2025 15:40:25,[test38@gmail.com](mailto:test38@gmail.com),Christian,Yes,,Yes,,No,Colour variant out of stock.,1
+5/7/2025 16:55:35,[test39@gmail.com](mailto:test39@gmail.com),Christian,Yes,,Yes,,No,Pricing changed after quote.,2
+5/7/2025 17:05:45,[test40@gmail.com](mailto:test40@gmail.com),Christian,Yes,,Yes,,No,Warranty terms vague.,1
+5/8/2025 9:15:10,[test41@gmail.com](mailto:test41@gmail.com),Lea,No,Issue still unresolved despite follow-up.,No,Explanation unclear and rushed.,No,Delivery date too late for project.,1
+5/8/2025 10:30:20,[test42@gmail.com](mailto:test42@gmail.com),Lea,No,Resolution promised but not delivered.,No,Slides unreadable on small screen.,No,Specs did not match brochure.,1
+5/8/2025 11:45:30,[test43@gmail.com](mailto:test43@gmail.com),Lea,No,Still waiting for technical team to contact me.,No,Poor audio quality during call.,No,Colour variant out of stock.,1
+5/8/2025 12:00:40,[test44@gmail.com](mailto:test44@gmail.com),Lea,No,Replacement part unavailable.,No,Rep spoke too quickly.,No,Pricing changed after quote.,1
+5/8/2025 13:15:50,[test45@gmail.com](mailto:test45@gmail.com),Lea,No,Need escalated but no update received.,No,"Too much jargon, no visuals.",No,Warranty terms vague.,1
+5/7/2025 13:10:05,[test46@gmail.com](mailto:test46@gmail.com),Lea,No,Issue still unresolved despite follow-up.,No,Explanation unclear and rushed.,No,Delivery date too late for project.,1
+5/7/2025 14:25:15,[test47@gmail.com](mailto:test47@gmail.com),Lea,No,Resolution promised but not delivered.,No,Slides unreadable on small screen.,No,Specs did not match brochure.,1
+5/7/2025 15:40:25,[test48@gmail.com](mailto:test48@gmail.com),Lea,No,Still waiting for technical team to contact me.,No,Poor audio quality during call.,No,Colour variant out of stock.,1
+5/7/2025 16:55:35,[test49@gmail.com](mailto:test49@gmail.com),Lea,No,Replacement part unavailable.,No,Rep spoke too quickly.,No,Pricing changed after quote.,1
+5/7/2025 17:05:45,[test50@gmail.com](mailto:test50@gmail.com),Lea,No,Need escalated but no update received.,No,"Too much jargon, no visuals.",No,Warranty terms vague.,1
+5/8/2025 9:15:10,[test51@gmail.com](mailto:test51@gmail.com),Paula,Others,Still evaluating outcome.,Others,Partially met; awaiting manager approval.,Others,Need more time to test product.,3
+5/8/2025 10:30:20,[test52@gmail.com](mailto:test52@gmail.com),Paula,Others,Partially met; awaiting manager approval.,Others,Still evaluating outcome.,Others,Awaiting confirmation from finance.,3
+5/8/2025 11:45:30,[test53@gmail.com](mailto:test53@gmail.com),Paula,Others,Still evaluating outcome.,Others,Information not fully relevant to my case.,Others,Need more time to test product.,3
+5/8/2025 12:00:40,[test54@gmail.com](mailto:test54@gmail.com),Paula,Others,N/A to my case.,Others,Still evaluating outcome.,Others,Awaiting confirmation from finance.,3
+5/8/2025 13:15:50,[test55@gmail.com](mailto:test55@gmail.com),Paula,Others,Partially met; awaiting manager approval.,Others,N/A to my case.,Others,Still evaluating outcome.,3
+5/7/2025 13:10:05,[test56@gmail.com](mailto:test56@gmail.com),Paula,Others,Still evaluating outcome.,Others,Partially met; awaiting manager approval.,Others,Need more time to test product.,3
+5/7/2025 14:25:15,[test57@gmail.com](mailto:test57@gmail.com),Paula,Others,N/A to my case.,Others,Still evaluating outcome.,Others,Awaiting confirmation from finance.,3
+5/7/2025 15:40:25,[test58@gmail.com](mailto:test58@gmail.com),Paula,Others,Partially met; awaiting manager approval.,Others,N/A to my case.,Others,Still evaluating outcome.,3
+5/7/2025 16:55:35,[test59@gmail.com](mailto:test59@gmail.com),Paula,Others,Still evaluating outcome.,Others,Information not fully relevant to my case.,Others,Need more time to test product.,3
+5/7/2025 17:05:45,[test60@gmail.com](mailto:test60@gmail.com),Paula,Others,Partially met; awaiting manager approval.,Others,N/A to my case.,Others,Still evaluating outcome.,3
+5/8/2025 9:15:10,[test61@gmail.com](mailto:test61@gmail.com),Mael,Yes,,Yes,,Yes,,4
+5/8/2025 10:30:20,[test62@gmail.com](mailto:test62@gmail.com),Mael,Yes,,Yes,,Yes,,3
+5/8/2025 11:45:30,[test63@gmail.com](mailto:test63@gmail.com),Mael,Yes,,Yes,,Yes,,4
+5/8/2025 12:00:40,[test64@gmail.com](mailto:test64@gmail.com),Mael,Yes,,Yes,,Yes,,3
+5/8/2025 13:15:50,[test65@gmail.com](mailto:test65@gmail.com),Mael,Yes,,Yes,,Yes,,4
+5/7/2025 13:10:05,[test66@gmail.com](mailto:test66@gmail.com),Mael,Yes,,Yes,,Yes,,4
+5/7/2025 14:25:15,[test67@gmail.com](mailto:test67@gmail.com),Mael,Yes,,Yes,,Yes,,3
+5/7/2025 15:40:25,[test68@gmail.com](mailto:test68@gmail.com),Mael,Yes,,Yes,,Yes,,4
+5/7/2025 16:55:35,[test69@gmail.com](mailto:test69@gmail.com),Mael,Yes,,Yes,,Yes,,3
+5/7/2025 17:05:45,[test70@gmail.com](mailto:test70@gmail.com),Mael,Yes,,Yes,,Yes,,4
+5/8/2025 9:15:10,[test71@gmail.com](mailto:test71@gmail.com),Pascal,Yes,,Yes,,No,Delivery date too late for project.,2
+5/8/2025 10:30:20,[test72@gmail.com](mailto:test72@gmail.com),Pascal,Yes,,Yes,,No,Specs did not match brochure.,1
+5/8/2025 11:45:30,[test73@gmail.com](mailto:test73@gmail.com),Pascal,Yes,,Yes,,No,Colour variant out of stock.,2
+5/8/2025 12:00:40,[test74@gmail.com](mailto:test74@gmail.com),Pascal,Yes,,Yes,,No,Pricing changed after quote.,2
+5/8/2025 13:15:50,[test75@gmail.com](mailto:test75@gmail.com),Pascal,Yes,,Yes,,No,Warranty terms vague.,2
+5/7/2025 13:10:05,[test76@gmail.com](mailto:test76@gmail.com),Pascal,Yes,,Yes,,No,Delivery date too late for project.,2
+5/7/2025 14:25:15,[test77@gmail.com](mailto:test77@gmail.com),Pascal,Yes,,Yes,,No,Specs did not match brochure.,1
+5/7/2025 15:40:25,[test78@gmail.com](mailto:test78@gmail.com),Pascal,Yes,,Yes,,No,Colour variant out of stock.,2
+5/7/2025 16:55:35,[test79@gmail.com](mailto:test79@gmail.com),Pascal,Yes,,Yes,,No,Pricing changed after quote.,2
+5/7/2025 17:05:45,[test80@gmail.com](mailto:test80@gmail.com),Pascal,Yes,,Yes,,No,Warranty terms vague.,2
+5/7/2025 9:15:30,test1@gmail.com,Jarviss,Yes,,Yes,,Yes,,5
+5/7/2025 9:52:11,test2@gmail.com,Jarviss,Yes,,Yes,,Yes,,5
+5/7/2025 10:30:05,test3@gmail.com,Jarviss,Yes,,Yes,,Yes,,4
+5/7/2025 11:18:40,test4@gmail.com,Jarviss,Yes,,Yes,,Yes,,4
+5/7/2025 12:05:55,test5@gmail.com,Jarviss,Yes,,Yes,,Yes,,5
+5/8/2025 9:01:19,test6@gmail.com,Jarviss,Yes,,Yes,,Yes,,5
+5/8/2025 9:45:30,test7@gmail.com,Jarviss,Yes,,Yes,,Yes,,5
+5/8/2025 10:22:15,test8@gmail.com,Jarviss,Yes,,Yes,,Yes,,5
+5/8/2025 11:00:00,test9@gmail.com,Jarviss,Yes,,Yes,,Yes,,5
+5/8/2025 11:38:45,test10@gmail.com,Jarviss,Yes,,Yes,,Yes,,5
+5/7/2025 9:20:10,test11@gmail.com,Claude,No,Didn't understand the core issue.,Yes,,Yes,,1
+5/7/2025 10:08:55,test12@gmail.com,Claude,No,Couldn't find a solution in the system.,Yes,,Yes,,2
+5/7/2025 10:45:20,test13@gmail.com,Claude,No,"Felt rushed, rep moved on too quickly.",Yes,,Yes,,1
+5/7/2025 11:30:00,test14@gmail.com,Claude,No,Was told they'd follow up but haven't.,Yes,,Yes,,2
+5/7/2025 12:15:00,test15@gmail.com,Claude,No,Rep was unfamiliar with my specific request.,Yes,,Yes,,1
+5/8/2025 9:05:30,test16@gmail.com,Claude,No,Didn't resolve my initial problem.,Yes,,Yes,,1
+5/8/2025 9:55:10,test17@gmail.com,Claude,No,The proposed solution didn't actually meet my needs.,Yes,,Yes,,2
+5/8/2025 10:35:45,test18@gmail.com,Claude,No,Rep seemed unsure how to help me.,Yes,,Yes,,1
+5/8/2025 11:15:00,test19@gmail.com,Claude,No,My core problem remains unsolved.,Yes,,Yes,,2
+5/8/2025 11:50:25,test20@gmail.com,Claude,No,They couldn't provide the specific information I needed.,Yes,,Yes,,1
+5/7/2025 9:25:00,test21@gmail.com,Samuel-Scott,Yes,,No,"Mumbled, hard to understand.",Yes,,2
+5/7/2025 10:10:15,test22@gmail.com,Samuel-Scott,Yes,,No,Rep seemed distracted during the call.,Yes,,3
+5/7/2025 10:50:30,test23@gmail.com,Samuel-Scott,Yes,,No,Rep seemed tired and not fully engaged.,Yes,,2
+5/7/2025 11:35:20,test24@gmail.com,Samuel-Scott,Yes,,No,Didn't explain the steps clearly.,Yes,,3
+5/7/2025 12:20:45,test25@gmail.com,Samuel-Scott,Yes,,No,Talked over me when I tried to ask questions.,Yes,,2
+5/8/2025 9:10:00,test26@gmail.com,Samuel-Scott,Yes,,No,Poor connection quality affected presentation.,Yes,,2
+5/8/2025 9:58:50,test27@gmail.com,Samuel-Scott,Yes,,No,Slides were confusing and rep just read from them.,Yes,,3
+5/8/2025 10:40:10,test28@gmail.com,Samuel-Scott,Yes,,No,"Presentation was too fast, hard to follow.",Yes,,2
+5/8/2025 11:20:35,test29@gmail.com,Samuel-Scott,Yes,,No,Rep didn't seem prepared for the demo part.,Yes,,3
+5/8/2025 12:05:00,test30@gmail.com,Samuel-Scott,Yes,,No,The demo environment didn't work properly.,Yes,,2
+5/7/2025 9:30:15,test31@gmail.com,Christian,Yes,,Yes,,No,Information given about feature X was incorrect.,1
+5/7/2025 10:15:00,test32@gmail.com,Christian,Yes,,Yes,,No,The product description on the website was inaccurate.,2
+5/7/2025 10:55:40,test33@gmail.com,Christian,Yes,,Yes,,No,"Information seemed hastily pulled together, maybe due to working on a Sunday.",1
+5/7/2025 11:40:00,test34@gmail.com,Christian,Yes,,Yes,,No,"Was promised functionality Y, but it's not available yet.",2
+5/7/2025 12:25:30,test35@gmail.com,Christian,Yes,,Yes,,No,The documentation provided was outdated.,1
+5/8/2025 9:15:00,test36@gmail.com,Christian,Yes,,Yes,,No,"The product works, but the required integration failed due to an external vendor issue.",2
+5/8/2025 10:05:10,test37@gmail.com,Christian,Yes,,Yes,,No,Product features didn't match what was initially presented.,1
+5/8/2025 10:45:55,test38@gmail.com,Christian,Yes,,Yes,,No,"Deadline was missed due to an internal product bug, not the rep's fault.",2
+5/8/2025 11:25:40,test39@gmail.com,Christian,Yes,,Yes,,No,There were unexpected limitations with the product functionality.,1
+5/8/2025 12:10:00,test40@gmail.com,Christian,Yes,,Yes,,No,The demo version performed better than the actual delivered product.,2
+5/7/2025 9:35:25,test41@gmail.com,Lea,No,Didn't help with my need.,No,Poor presentation.,No,Info was wrong.,1
+5/7/2025 10:20:00,test42@gmail.com,Lea,No,Still need assistance.,No,Unclear.,No,Info outdated.,1
+5/7/2025 11:00:00,test43@gmail.com,Lea,No,Felt rushed.,No,Seemed tired.,No,Didn't cover all points.,1
+5/7/2025 11:45:30,test44@gmail.com,Lea,No,Problem persists.,No,Not satisfied with demo.,No,Product info confusing.,1
+5/7/2025 12:30:50,test45@gmail.com,Lea,No,Didn't get a solution.,No,Rep seemed unprepared.,No,Deadlines seem unrealistic.,1
+5/8/2025 9:20:00,test46@gmail.com,Lea,No,Issue unresolved.,No,Very fast paced.,No,Product limitations weren't mentioned.,1
+5/8/2025 10:10:35,test47@gmail.com,Lea,No,"Need follow up, immediately.",No,Difficult to understand accent.,No,Information conflicted with website.,1
+5/8/2025 10:50:15,test48@gmail.com,Lea,No,Meeting was unproductive.,No,Rep didn't listen.,No,Product features misrepresented.,1
+5/8/2025 11:30:50,test49@gmail.com,Lea,No,No clear path forward.,No,Disorganized presentation.,No,Didn't address my technical questions.,1
+5/8/2025 12:15:00,test50@gmail.com,Lea,No,Wasted time.,No,Poor communication skills.,No,Didn't explain pricing correctly.,1
+5/7/2025 9:40:00,test51@gmail.com,Paula,Others,,Others,,Others,,3
+5/7/2025 10:25:10,test52@gmail.com,Paula,Others,,Others,,Yes,,3
+5/7/2025 11:05:30,test53@gmail.com,Paula,Others,,Others,,Others,,3
+5/7/2025 11:50:45,test54@gmail.com,Paula,Yes,,Others,,Others,,3
+5/7/2025 12:35:00,test55@gmail.com,Paula,Others,,Yes,,Others,,3
+5/8/2025 9:25:15,test56@gmail.com,Paula,Others,,Others,,Others,,3
+5/8/2025 10:15:00,test57@gmail.com,Paula,Others,,Others,,No,Info was only partially correct.,3
+5/8/2025 10:55:20,test58@gmail.com,Paula,Yes,,Others,,Others,,3
+5/8/2025 11:35:00,test59@gmail.com,Paula,Others,,Yes,,Others,,3
+5/8/2025 12:20:40,test60@gmail.com,Paula,Others,,Others,,Others,,3
+5/7/2025 9:45:10,test61@gmail.com,Mael,Yes,,Yes,,Yes,,3
+5/7/2025 10:30:00,test62@gmail.com,Mael,Yes,,Yes,,Yes,,4
+5/7/2025 11:10:40,test63@gmail.com,Mael,Yes,,Yes,,Yes,,3
+5/7/2025 11:55:00,test64@gmail.com,Mael,Yes,,Yes,,Yes,,4
+5/7/2025 12:40:15,test65@gmail.com,Mael,Yes,,Yes,,Yes,,3
+5/8/2025 9:30:00,test66@gmail.com,Mael,Yes,,Yes,,Yes,,4
+5/8/2025 10:20:30,test67@gmail.com,Mael,Yes,,Yes,,Yes,,3
+5/8/2025 11:00:50,test68@gmail.com,Mael,Yes,,Yes,,Yes,,4
+5/8/2025 11:40:10,test69@gmail.com,Mael,Yes,,Yes,,Yes,,3
+5/8/2025 12:25:00,test70@gmail.com,Mael,Yes,,Yes,,Yes,,4
+5/7/2025 9:50:00,test71@gmail.com,Pascal,Yes,,Yes,,No,Information was misleading about feature Y.,2
+5/7/2025 10:35:25,test72@gmail.com,Pascal,Yes,,Yes,,No,The product didn't perform as demonstrated.,2
+5/7/2025 11:15:00,test73@gmail.com,Pascal,Yes,,Yes,,No,"The information seemed less detailed than I expected, maybe due to the Sunday meeting.",2
+5/7/2025 12:00:30,test74@gmail.com,Pascal,Yes,,Yes,,No,"Was told product Z was compatible, but it's not.",2
+5/7/2025 12:45:00,test75@gmail.com,Pascal,Yes,,Yes,,No,The proposed solution requires a product update that is delayed externally.,2
+5/8/2025 9:35:40,test76@gmail.com,Pascal,Yes,,Yes,,No,Didn't fully explain the technical limitations.,2
+5/8/2025 10:25:00,test77@gmail.com,Pascal,Yes,,Yes,,No,The provided documentation had errors.,2
+5/8/2025 11:05:10,test78@gmail.com,Pascal,Yes,,Yes,,No,Key product features I asked about weren't covered.,2
+5/8/2025 11:45:25,test79@gmail.com,Pascal,Yes,,Yes,,No,The trial version had more features than the licensed one presented.,2
+5/8/2025 12:30:00,test80@gmail.com,Pascal,Yes,,Yes,,No,Didn't explain the necessary setup steps clearly.,2
