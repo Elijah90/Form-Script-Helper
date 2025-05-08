@@ -24,15 +24,6 @@ function createKPITiles(startRow) {
       return startRow + 7;
     }
     
-    // Get today's and yesterday's dates
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    
-    // Format dates for comparison
-    const todayString = Utilities.formatDate(today, ss.getSpreadsheetTimeZone(), "yyyy-MM-dd");
-    const yesterdayString = Utilities.formatDate(yesterday, ss.getSpreadsheetTimeZone(), "yyyy-MM-dd");
-    
     // Get all response data
     const responseData = formSheet.getDataRange().getValues();
     const headers = responseData[0]; // First row contains headers
@@ -69,6 +60,32 @@ function createKPITiles(startRow) {
       createEmptyKPITiles(sheet, startRow);
       return startRow + 7;
     }
+    
+    // Find the most recent date in the data (instead of using current date)
+    let mostRecentDate = null;
+    for (let i = 1; i < responseData.length; i++) {
+      const row = responseData[i];
+      if (!row[timestampCol]) continue;
+      
+      const responseDate = new Date(row[timestampCol]);
+      if (!mostRecentDate || responseDate > mostRecentDate) {
+        mostRecentDate = responseDate;
+      }
+    }
+    
+    // If no valid dates found, use current date as fallback
+    if (!mostRecentDate) {
+      mostRecentDate = new Date();
+    }
+    
+    // Set "today" as the most recent date in the data
+    const today = mostRecentDate;
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    // Format dates for comparison
+    const todayString = Utilities.formatDate(today, ss.getSpreadsheetTimeZone(), "yyyy-MM-dd");
+    const yesterdayString = Utilities.formatDate(yesterday, ss.getSpreadsheetTimeZone(), "yyyy-MM-dd");
     
     // Count submissions and calculate metrics
     let todaySubmissions = 0;
