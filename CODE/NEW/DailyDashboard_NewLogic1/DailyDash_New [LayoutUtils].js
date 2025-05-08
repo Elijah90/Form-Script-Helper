@@ -366,9 +366,6 @@ function formatKpiValueWithChange(sheet, row, column, value, change, reverseColo
        .setVerticalAlignment("middle")
        .setHorizontalAlignment("left");
   
-  // If no change, we're done
-  if (change === 0) return;
-  
   // Create the change indicator text
   let changeText = "";
   let changeColor = DASHBOARD_COLORS.subText;
@@ -379,6 +376,10 @@ function formatKpiValueWithChange(sheet, row, column, value, change, reverseColo
   } else if (change < 0) {
     changeText = "▼ " + Math.abs(change);
     changeColor = reverseColors ? DASHBOARD_COLORS.positive : DASHBOARD_COLORS.negative;
+  } else {
+    // When change is exactly 0, clear any previous change indicator
+    sheet.getRange(row, column + 1).clearContent();
+    return;
   }
   
   // Add the change indicator directly next to the main value
