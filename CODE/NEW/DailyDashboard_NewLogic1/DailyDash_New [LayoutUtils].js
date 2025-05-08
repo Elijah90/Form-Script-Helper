@@ -356,17 +356,28 @@ function createSectionContainer(sheet, startRow, numRows, startCol, numCols, tit
  * @param {number} change - The change value
  * @param {boolean} reverseColors - Whether to reverse the color logic
  */
+/**
+ * Formats a KPI value with change indicator
+ * @param {Sheet} sheet - The Google Sheet
+ * @param {number} row - The row for the main value
+ * @param {number} column - The column for the main value
+ * @param {any} value - The main KPI value
+ * @param {number} change - The change value
+ * @param {boolean} reverseColors - Whether to reverse the color logic
+ */
 function formatKpiValueWithChange(sheet, row, column, value, change, reverseColors = false) {
   // Format the main value in the first column
-  const valueCell = sheet.getRange(row, column)
+  sheet.getRange(row, column)
        .setValue(value)
        .setFontSize(36)
        .setFontWeight("bold")
        .setFontColor(DASHBOARD_COLORS.headerText)
        .setVerticalAlignment("middle")
-       .setHorizontalAlignment("left");
+       .setHorizontalAlignment("left")
+       // Add number formatting to prevent percentage issues
+       .setNumberFormat("@"); // Display as plain text
   
-  // Create the change indicator text
+  // Always show change indicator, even if change is 0
   let changeText = "";
   let changeColor = DASHBOARD_COLORS.subText;
   
@@ -377,12 +388,12 @@ function formatKpiValueWithChange(sheet, row, column, value, change, reverseColo
     changeText = "▼ " + Math.abs(change);
     changeColor = reverseColors ? DASHBOARD_COLORS.positive : DASHBOARD_COLORS.negative;
   } else {
-    // When change is exactly 0, clear any previous change indicator
-    sheet.getRange(row, column + 1).clearContent();
-    return;
+    // When change is exactly 0, show a neutral indicator
+    changeText = "◆ 0";
+    changeColor = DASHBOARD_COLORS.neutral;
   }
   
-  // Add the change indicator directly next to the main value
+  // Add the change indicator in the column to the right
   sheet.getRange(row, column + 1)
        .setValue(changeText)
        .setFontSize(14)
