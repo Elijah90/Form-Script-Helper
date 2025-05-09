@@ -308,3 +308,122 @@ function testKPITilesSection() {
   // Log the result
   Logger.log("KPI tiles section created. Next row: " + nextRow);
 }
+
+/**
+ * Creates KPI tiles section with the main metrics
+ * @param {number} startRow - The starting row for the section
+ * @returns {number} - The next row after this section
+ */
+function createKPITiles(startRow) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('DailyDash');
+  const dataSource = getSelectedDataSource();
+  
+  // Set row heights for the KPI section
+  setKpiRowHeights(sheet, startRow);
+  
+  // Create the KPI tiles
+  createSubmissionsTile(sheet, startRow, 1, dataSource);
+  createAverageRatingTile(sheet, startRow, 3, dataSource);
+  createFiveStarRatingsTile(sheet, startRow, 5, dataSource);
+  createNegativeCasesTile(sheet, startRow, 7, dataSource);
+  
+  // Add spacing after KPI section
+  addSectionSpacing(sheet, startRow + 6);
+}
+
+/**
+ * Creates the Submissions Today KPI tile
+ * @param {Sheet} sheet - The Google Sheet
+ * @param {number} startRow - The starting row for the tile
+ * @param {number} startCol - The starting column for the tile
+ * @param {object} dataSource - The data source object
+ */
+function createSubmissionsTile(sheet, startRow, startCol, dataSource) {
+  // Create tile container
+  formatTile(sheet.getRange(startRow, startCol, 5, 2));
+  
+  // Add title
+  formatKpiTitle(sheet, startRow, startCol, "Submissions Today");
+  
+  // Get today's and yesterday's data
+  const today = new Date();
+  const todayData = getTodayData(dataSource);
+  const yesterdayData = getYesterdayData(dataSource);
+  
+  // Calculate the KPI value and change
+  const submissionsToday = todayData ? todayData.submissions : 0;
+  const submissionsYesterday = yesterdayData ? yesterdayData.submissions : 0;
+  const change = submissionsToday - submissionsYesterday;
+  
+  // Format the KPI value with change indicator
+  formatKpiValueWithChange(sheet, startRow + 1, startCol, submissionsToday, change);
+  
+  // Add "vs. yesterday" text below the main value
+  sheet.getRange(startRow + 3, startCol)
+       .setValue("vs. yesterday")
+       .setFontSize(10)
+       .setFontColor(DASHBOARD_COLORS.subText)
+       .setVerticalAlignment("top")
+       .setHorizontalAlignment("left");
+       
+  // Move the change indicator below the "vs. yesterday" text
+  if (change !== 0) {
+    // Get the change indicator text and color from the current position
+    const changeCell = sheet.getRange(startRow + 1, startCol + 1);
+    const changeText = changeCell.getValue();
+    const changeColor = changeCell.getFontColor();
+    
+    // Clear the original change indicator
+    changeCell.clearContent();
+    
+    // Add the change indicator below the "vs. yesterday" text
+    sheet.getRange(startRow + 4, startCol)
+         .setValue(changeText)
+         .setFontSize(14)
+         .setFontColor(changeColor)
+         .setVerticalAlignment("top")
+         .setHorizontalAlignment("left");
+  }
+}
+
+/**
+ * Creates the Five Star Ratings KPI tile with special handling
+ * @param {Sheet} sheet - The Google Sheet
+ * @param {number} startRow - The starting row for the tile
+ * @param {number} startCol - The starting column for the tile
+ * @param {object} dataSource - The data source object
+ */
+function createFiveStarRatingsTile(sheet, startRow, startCol, dataSource) {
+  // Create tile container
+  formatTile(sheet.getRange(startRow, startCol, 5, 2));
+  
+  // Add title
+  formatKpiTitle(sheet, startRow, startCol, "5-Star Ratings");
+  
+  // Get today's and yesterday's data
+  const today = new Date();
+  const todayData = getTodayData(dataSource);
+  const yesterdayData = getYesterdayData(dataSource);
+  
+  // Calculate the KPI value and change
+  const fiveStarsToday = todayData ? todayData.fiveStarRatings : 0;
+  const fiveStarsYesterday = yesterdayData ? yesterdayData.fiveStarRatings : 0;
+  const change = fiveStarsToday - fiveStarsYesterday;
+  
+  // Format the KPI value with change indicator - use larger font for this specific tile
+  formatKpiValueWithChange(sheet, startRow + 1, startCol, fiveStarsToday, change);
+  
+  // Make the change indicator slightly larger for this tile
+  if (change !== 0) {
+    sheet.getRange(startRow + 1, startCol + 1)
+         .setFontSize(16); // Slightly larger than the default 14
+  }
+  
+  // Add "0% of total" text below the main value
+  sheet.getRange(startRow + 3, startCol)
+       .setValue(Math.round((fiveStarsToday / (todayData ? todayData.totalRatings : 1)) * 100) + "% of total")
+       .setFontSize(10)
+       .setFontColor(DASHBOARD_COLORS.subText)
+       .setVerticalAlignment("top")
+       .setHorizontalAlignment("left");
+}

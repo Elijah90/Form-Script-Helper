@@ -374,7 +374,6 @@ function formatKpiValueWithChange(sheet, row, column, value, change, reverseColo
        .setFontColor(DASHBOARD_COLORS.headerText)
        .setVerticalAlignment("middle")
        .setHorizontalAlignment("left")
-       // Add number formatting to prevent percentage issues
        .setNumberFormat("@"); // Display as plain text
   
   // Always show change indicator, even if change is 0
@@ -388,9 +387,9 @@ function formatKpiValueWithChange(sheet, row, column, value, change, reverseColo
     changeText = "▼ " + Math.abs(change);
     changeColor = reverseColors ? DASHBOARD_COLORS.positive : DASHBOARD_COLORS.negative;
   } else {
-    // When change is exactly 0, show a neutral indicator
-    changeText = "◆ 0";
-    changeColor = DASHBOARD_COLORS.neutral;
+    // When change is exactly 0, show a neutral indicator with an orange color and em dash
+    changeText = "✒︎ 0";
+    changeColor = "#FF9800"; // Orange color for neutral change
   }
   
   // Add the change indicator in the column to the right
