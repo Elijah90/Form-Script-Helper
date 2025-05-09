@@ -24,7 +24,8 @@ function refreshDashboard() {
   }
   
   // Get the selected data source
-  const dataSource = getDataSourceSheet();
+  const dataSource = getDataSourceSheet(); // Changed from getSelectedDataSource to getDataSourceSheet
+  Logger.log(`Starting dashboard refresh with data source: ${dataSource}`);
   if (!dataSource) {
     ss.toast("Please select a data source from the dropdown first", "Data Source Required", 3);
     return;

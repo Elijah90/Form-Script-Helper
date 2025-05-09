@@ -17,7 +17,8 @@ const DASHBOARD_COLORS = {
   positive: "#4CAF50",    // Green
   warning: "#FFEB3B",     // Yellow
   negative: "#F44336",    // Red
-  neutral: "#2196F3"      // Blue
+  neutral: "#2196F3",      // Blue
+  neutralChange: "#FF9800" // Orange for neutral change
 };
 
 /**
@@ -348,15 +349,6 @@ function createSectionContainer(sheet, startRow, numRows, startCol, numCols, tit
 }
 
 /**
- * Formats a KPI value with change indicator on the same row
- * @param {Sheet} sheet - The Google Sheet
- * @param {number} row - The row for the main value
- * @param {number} column - The column for the main value
- * @param {any} value - The main KPI value
- * @param {number} change - The change value
- * @param {boolean} reverseColors - Whether to reverse the color logic
- */
-/**
  * Formats a KPI value with change indicator
  * @param {Sheet} sheet - The Google Sheet
  * @param {number} row - The row for the main value
@@ -364,9 +356,9 @@ function createSectionContainer(sheet, startRow, numRows, startCol, numCols, tit
  * @param {any} value - The main KPI value
  * @param {number} change - The change value
  * @param {boolean} reverseColors - Whether to reverse the color logic
- * @param {boolean} isFiveStarRating - Whether this is the 5-Star Ratings tile
+ * @param {boolean} is5StarRating - Whether this is the 5-Star Ratings tile
  */
-function formatKpiValueWithChange(sheet, row, column, value, change, reverseColors = false, isFiveStarRating = false) {
+function formatKpiValueWithChange(sheet, row, column, value, change, reverseColors = false, is5StarRating = false) {
   // Format the main value in the first column
   sheet.getRange(row, column)
        .setValue(value)
@@ -375,27 +367,11 @@ function formatKpiValueWithChange(sheet, row, column, value, change, reverseColo
        .setFontColor(DASHBOARD_COLORS.headerText)
        .setVerticalAlignment("middle")
        .setHorizontalAlignment("left")
-       // Add number formatting to prevent percentage issues
        .setNumberFormat("@"); // Display as plain text
-  
-  // If no change, we're done
-  if (change === 0) {
-    if (isFiveStarRating) {
-      // For 5-Star Ratings with no change, still show a neutral indicator
-      sheet.getRange(row, column + 1)
-           .setValue("✒︎ 0")
-           .setFontSize(18)
-           .setFontColor(DASHBOARD_COLORS.subText)
-           .setVerticalAlignment("middle")
-           .setHorizontalAlignment("left");
-    }
-    return;
-  }
   
   // Create the change indicator text
   let changeText = "";
   let changeColor = DASHBOARD_COLORS.subText;
-  let fontSize = isFiveStarRating ? 18 : 14; // Bigger font for 5-Star Ratings
   
   if (change > 0) {
     changeText = "▲ " + Math.abs(change);
@@ -403,15 +379,50 @@ function formatKpiValueWithChange(sheet, row, column, value, change, reverseColo
   } else if (change < 0) {
     changeText = "▼ " + Math.abs(change);
     changeColor = reverseColors ? DASHBOARD_COLORS.positive : DASHBOARD_COLORS.negative;
+  } else {
+    // When change is exactly 0, show a neutral indicator
+    changeText = "✒︎ 0";
+    changeColor = DASHBOARD_COLORS.neutralChange; // Orange color for neutral change
   }
   
-  // Add the change indicator in the column to the right
-  sheet.getRange(row, column + 1)
-       .setValue(changeText)
-       .setFontSize(fontSize)
-       .setFontColor(changeColor)
-       .setVerticalAlignment("middle")
-       .setHorizontalAlignment("left");
+  // Clear any previous content in the change indicator cell
+  sheet.getRange(row, column + 1).clearContent();
+  
+  if (is5StarRating) {
+    // For 5-Star Ratings, increase the size of the indicator in its original position
+    sheet.getRange(row, column + 1)
+         .setValue(changeText)
+         .setFontSize(18) // Increased font size for 5-Star Ratings
+         .setFontColor(changeColor)
+         .setVerticalAlignment("middle")
+         .setHorizontalAlignment("left");
+  } else {
+    // For other tiles, move the variation indicator to be part of the "vs. yesterday" text
+    // Clear the original position first
+    sheet.getRange(row + 1, column).clearContent();
+    
+    // Format the variation indicator with its color
+    const vsYesterdayCell = sheet.getRange(row + 1, column);
+    vsYesterdayCell.setValue(changeText + " vs. yesterday")
+                   .setFontSize(12)
+                   .setVerticalAlignment("middle")
+                   .setHorizontalAlignment("left");
+    
+    // Apply rich text formatting to color only the variation part
+    const richText = SpreadsheetApp.newRichTextValue()
+                                  .setText(changeText + " vs. yesterday")
+                                  .setTextStyle(0, changeText.length, SpreadsheetApp.newTextStyle()
+                                                                      .setForegroundColor(changeColor)
+                                                                      .build())
+                                  .setTextStyle(changeText.length, changeText.length + " vs. yesterday".length, 
+                                               SpreadsheetApp.newTextStyle()
+                                                             .setForegroundColor(DASHBOARD_COLORS.subText)
+                                                             .build())
+                                  .build();
+    
+    vsYesterdayCell.setRichTextValue(richText);
+  }
+
 }
 
 /**
