@@ -364,8 +364,9 @@ function createSectionContainer(sheet, startRow, numRows, startCol, numCols, tit
  * @param {any} value - The main KPI value
  * @param {number} change - The change value
  * @param {boolean} reverseColors - Whether to reverse the color logic
+ * @param {boolean} isFiveStarRating - Whether this is the 5-Star Ratings tile
  */
-function formatKpiValueWithChange(sheet, row, column, value, change, reverseColors = false) {
+function formatKpiValueWithChange(sheet, row, column, value, change, reverseColors = false, isFiveStarRating = false) {
   // Format the main value in the first column
   sheet.getRange(row, column)
        .setValue(value)
@@ -374,11 +375,27 @@ function formatKpiValueWithChange(sheet, row, column, value, change, reverseColo
        .setFontColor(DASHBOARD_COLORS.headerText)
        .setVerticalAlignment("middle")
        .setHorizontalAlignment("left")
+       // Add number formatting to prevent percentage issues
        .setNumberFormat("@"); // Display as plain text
   
-  // Always show change indicator, even if change is 0
+  // If no change, we're done
+  if (change === 0) {
+    if (isFiveStarRating) {
+      // For 5-Star Ratings with no change, still show a neutral indicator
+      sheet.getRange(row, column + 1)
+           .setValue("✒︎ 0")
+           .setFontSize(18)
+           .setFontColor(DASHBOARD_COLORS.subText)
+           .setVerticalAlignment("middle")
+           .setHorizontalAlignment("left");
+    }
+    return;
+  }
+  
+  // Create the change indicator text
   let changeText = "";
   let changeColor = DASHBOARD_COLORS.subText;
+  let fontSize = isFiveStarRating ? 18 : 14; // Bigger font for 5-Star Ratings
   
   if (change > 0) {
     changeText = "▲ " + Math.abs(change);
@@ -386,16 +403,12 @@ function formatKpiValueWithChange(sheet, row, column, value, change, reverseColo
   } else if (change < 0) {
     changeText = "▼ " + Math.abs(change);
     changeColor = reverseColors ? DASHBOARD_COLORS.positive : DASHBOARD_COLORS.negative;
-  } else {
-    // When change is exactly 0, show a neutral indicator with an orange color and em dash
-    changeText = "✒︎ 0";
-    changeColor = "#FF9800"; // Orange color for neutral change
   }
   
   // Add the change indicator in the column to the right
   sheet.getRange(row, column + 1)
        .setValue(changeText)
-       .setFontSize(14)
+       .setFontSize(fontSize)
        .setFontColor(changeColor)
        .setVerticalAlignment("middle")
        .setHorizontalAlignment("left");

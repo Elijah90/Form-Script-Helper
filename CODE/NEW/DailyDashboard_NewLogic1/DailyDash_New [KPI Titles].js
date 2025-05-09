@@ -204,6 +204,12 @@ const kpiTiles = [
  * @param {Object} tileConfig - The tile configuration object
  */
 
+/**
+ * Creates a single KPI tile
+ * @param {Sheet} sheet - The dashboard sheet
+ * @param {number} startRow - The starting row
+ * @param {Object} tileConfig - The tile configuration object
+ */
 function createSimpleKPITile(sheet, startRow, tileConfig) {
   // Format the tile container to span 2 columns
   formatTile(sheet.getRange(startRow, tileConfig.column, 5, 2));
@@ -217,6 +223,9 @@ function createSimpleKPITile(sheet, startRow, tileConfig) {
        .setVerticalAlignment("middle")
        .setHorizontalAlignment("left");
   
+  // Check if this is the 5-Star Ratings tile
+  const isFiveStarRating = tileConfig.title === "5-Star Ratings";
+  
   // Set the main value with change indicator (each in its own column)
   formatKpiValueWithChange(
     sheet, 
@@ -224,7 +233,8 @@ function createSimpleKPITile(sheet, startRow, tileConfig) {
     tileConfig.column, 
     tileConfig.value, 
     tileConfig.change, 
-    tileConfig.title === "% Negative Cases"
+    tileConfig.title === "% Negative Cases",
+    isFiveStarRating
   );
   
   // Set the subtitle to span both columns
@@ -236,9 +246,8 @@ function createSimpleKPITile(sheet, startRow, tileConfig) {
        .setVerticalAlignment("top")
        .setHorizontalAlignment("left");
   
-  // Apply yellow highlight bar for Average Rating only but on the main value row
+  // Apply yellow highlight bar for Average Rating only
   if (tileConfig.title === "Average Rating") {
-    // Apply to startRow + 1 (main value row) instead of startRow + 4
     createYellowHighlightBar(sheet, startRow + 1, tileConfig.column);
   }
 }
