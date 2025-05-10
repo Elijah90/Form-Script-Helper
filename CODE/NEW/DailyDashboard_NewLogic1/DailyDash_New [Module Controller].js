@@ -56,7 +56,7 @@ function refreshDashboard() {
     let nextRow = createDashboardHeader();
     Logger.log("Header refreshed. Next row: " + nextRow);
     
-    // Add KPI tiles when implemented
+    // Add KPI tiles
     if (typeof createKPITiles === 'function') {
       Logger.log("DEBUG: About to create KPI tiles");
       nextRow = createKPITiles(nextRow);
@@ -65,10 +65,13 @@ function refreshDashboard() {
       Logger.log("DEBUG: createKPITiles function not found");
     }
     
-    // Add Rep Performance table when implemented
+    // Add Rep Performance table
     if (typeof createRepPerformanceTable === 'function') {
+      Logger.log("DEBUG: About to create Rep Performance table");
       nextRow = createRepPerformanceTable(nextRow);
       Logger.log("Rep Performance table refreshed. Next row: " + nextRow);
+    } else {
+      Logger.log("DEBUG: createRepPerformanceTable function not found");
     }
     
     // Add Milestone Alerts when implemented

@@ -22,23 +22,41 @@ const DASHBOARD_COLORS = {
 };
 
 /**
- * Sets up the standard dashboard column widths for proper layout
- * Updated to decrease left column by 20% and increase right column
+ * Dashboard layout constants
+ */
+const DASHBOARD_LAYOUT = {
+  tileMaxWidth: 230,           // Max width for KPI tiles
+  tileFirstCellPercent: 0.38,  // 38% of tile width
+  tileSecondCellPercent: 0.62, // 62% of tile width
+  spacerWidth: 30,             // Width between tiles
+  
+  // Use the original working widths instead of calculated values
+  tileFirstCellWidth: 110,     // Original working width
+  tileSecondCellWidth: 120     // Original working width
+};
+
+/**
+ * Sets up the flexible dashboard column widths
  * @param {Sheet} sheet - The Google Sheet to format
  */
 function setDashboardColumnWidths(sheet) {
-  // Set column widths for KPI tiles with adjusted distribution
-  sheet.setColumnWidth(1, 88);   // A - Main value column (was 110, now 88 = 80% of 110)
-  sheet.setColumnWidth(2, 142);  // B - Change indicator column (was 120, now 142 = 120 + 22)
-  sheet.setColumnWidth(3, 30);   // C - Spacer between tiles
-  sheet.setColumnWidth(4, 88);   // D - Main value column 
-  sheet.setColumnWidth(5, 142);  // E - Change indicator column
-  sheet.setColumnWidth(6, 30);   // F - Spacer between tiles
-  sheet.setColumnWidth(7, 88);   // G - Main value column
-  sheet.setColumnWidth(8, 142);  // H - Change indicator column
-  sheet.setColumnWidth(9, 30);   // I - Spacer between tiles
-  sheet.setColumnWidth(10, 88);  // J - Main value column
-  sheet.setColumnWidth(11, 142); // K - Change indicator column
+  // Use the original working widths that were proven to work
+  const firstCellWidth = DASHBOARD_LAYOUT.tileFirstCellWidth;   // 110px (original)
+  const secondCellWidth = DASHBOARD_LAYOUT.tileSecondCellWidth; // 120px (original)
+  const spacerWidth = DASHBOARD_LAYOUT.spacerWidth;            // 30px
+  
+  // Set column widths for KPI tiles with consistent spacing
+  sheet.setColumnWidth(1, firstCellWidth);   // A - KPI 1 first cell
+  sheet.setColumnWidth(2, secondCellWidth);  // B - KPI 1 second cell
+  sheet.setColumnWidth(3, spacerWidth);      // C - Spacer
+  sheet.setColumnWidth(4, firstCellWidth);   // D - KPI 2 first cell
+  sheet.setColumnWidth(5, secondCellWidth);  // E - KPI 2 second cell
+  sheet.setColumnWidth(6, spacerWidth);      // F - Spacer
+  sheet.setColumnWidth(7, firstCellWidth);   // G - KPI 3 first cell
+  sheet.setColumnWidth(8, secondCellWidth);  // H - KPI 3 second cell
+  sheet.setColumnWidth(9, spacerWidth);      // I - Spacer
+  sheet.setColumnWidth(10, firstCellWidth);  // J - KPI 4 first cell
+  sheet.setColumnWidth(11, secondCellWidth); // K - KPI 4 second cell
   
   // Other columns for later sections
   sheet.setColumnWidth(15, 175); // O - Dashboard controls
@@ -46,16 +64,11 @@ function setDashboardColumnWidths(sheet) {
 }
 
 /**
- * Sets standard row heights for KPI tiles
- * Updated to remove rows 7 and 8
- * @param {Sheet} sheet - The Google Sheet to format
- * @param {number} startRow - The starting row for the KPI section
+ * Gets the column positions for KPI tiles based on flexible layout
+ * @return {Array} Array of starting columns for each KPI tile
  */
-function setKpiRowHeights(sheet, startRow) {
-  sheet.setRowHeight(startRow, 25);     // Title row
-  sheet.setRowHeight(startRow + 1, 50); // Main value row - taller for large text
-  sheet.setRowHeight(startRow + 2, 25); // Variation/subtitle row
-  // Removed rows 7 and 8
+function getKpiTileColumns() {
+  return [1, 4, 7, 10]; // Starting columns for each tile
 }
 
 /**
@@ -112,12 +125,14 @@ function formatSectionHeader(headerRange, title) {
  * @param {string} title - The title text
  */
 function formatKpiTitle(sheet, row, column, title) {
-  sheet.getRange(row, column)
+  // Merge both cells for the title
+  sheet.getRange(row, column, 1, 2)
+       .merge()
        .setValue(title)
        .setFontSize(14)
        .setFontColor(DASHBOARD_COLORS.subText)
        .setVerticalAlignment("middle")
-       .setHorizontalAlignment("left");  // Left-align titles
+       .setHorizontalAlignment("left");
 }
 
 /**
@@ -138,7 +153,7 @@ function formatKpiValue(sheet, row, column, value) {
        .setFontWeight("bold")
        .setFontColor(DASHBOARD_COLORS.headerText)
        .setVerticalAlignment("middle")
-       .setHorizontalAlignment("left");  // Left-align values
+       .setHorizontalAlignment("left");
 }
 
 /**
@@ -149,12 +164,14 @@ function formatKpiValue(sheet, row, column, value) {
  * @param {string} subtitle - The subtitle text
  */
 function formatKpiSubtitle(sheet, row, column, subtitle) {
-  sheet.getRange(row, column)
+  // Merge both cells for the subtitle
+  sheet.getRange(row, column, 1, 2)
+       .merge()
        .setValue(subtitle)
        .setFontSize(12)
        .setFontColor(DASHBOARD_COLORS.subText)
        .setVerticalAlignment("top")
-       .setHorizontalAlignment("left");  // Left-align subtitles
+       .setHorizontalAlignment("left");
 }
 
 /**
@@ -164,10 +181,9 @@ function formatKpiSubtitle(sheet, row, column, subtitle) {
  * @param {number} column - The column for the highlight bar
  */
 function createYellowHighlightBar(sheet, row, column) {
-  // Move highlight to row 5 (main value row instead of row + 4)
-  // This puts the highlight where the main figure is
+  // Highlight both cells in the main value row
   sheet.getRange(row, column, 1, 2)
-       .setBackground(DASHBOARD_COLORS.warning); // Yellow highlight
+       .setBackground(DASHBOARD_COLORS.warning);
 }
 
 /**
@@ -363,7 +379,7 @@ function createSectionContainer(sheet, startRow, numRows, startCol, numCols, tit
 }
 
 /**
- * Formats a KPI value with change indicator
+ * Formats a KPI value with change indicator using flexible layout
  * @param {Sheet} sheet - The Google Sheet
  * @param {number} row - The row for the main value
  * @param {number} column - The column for the main value
@@ -371,11 +387,9 @@ function createSectionContainer(sheet, startRow, numRows, startCol, numCols, tit
  * @param {number} change - The change value
  * @param {boolean} reverseColors - Whether to reverse the color logic
  * @param {boolean} is5StarRating - Whether this is the 5-Star Ratings tile
- * @param {boolean} isAverageRating - Whether this is the Average Rating tile
- * @param {boolean} isSubmissionsToday - Whether this is the Submissions Today tile
  */
-function formatKpiValueWithChange(sheet, row, column, value, change, reverseColors = false, is5StarRating = false, isAverageRating = false, isSubmissionsToday = false) {
-  // Format the main value in the first column
+function formatKpiValueWithChange(sheet, row, column, value, change, reverseColors = false, is5StarRating = false) {
+  // Format the main value in the first cell
   sheet.getRange(row, column)
        .setValue(value)
        .setFontSize(36)
@@ -383,7 +397,7 @@ function formatKpiValueWithChange(sheet, row, column, value, change, reverseColo
        .setFontColor(DASHBOARD_COLORS.headerText)
        .setVerticalAlignment("middle")
        .setHorizontalAlignment("left")
-       .setNumberFormat("@"); // Display as plain text
+       .setNumberFormat("@");
   
   // Create the change indicator text
   let changeText = "";
@@ -396,46 +410,43 @@ function formatKpiValueWithChange(sheet, row, column, value, change, reverseColo
     changeText = "▼ " + Math.abs(change);
     changeColor = reverseColors ? DASHBOARD_COLORS.positive : DASHBOARD_COLORS.negative;
   } else {
-    // When change is exactly 0, show a neutral indicator
-    changeText = "✒︎ 0";
-    changeColor = DASHBOARD_COLORS.neutralChange; // Orange color for neutral change
+    changeText = "— 0";
+    changeColor = DASHBOARD_COLORS.neutralChange;
   }
   
-  // Clear any previous content in the change indicator cell
+  // Clear the second cell
   sheet.getRange(row, column + 1).clearContent();
   
-  // All tiles now use the same format: variation + "vs. yesterday" in row 6
-  const vsYesterdayRow = row + 1;
-  
-  // Clear any existing content in that row for this tile's columns
-  sheet.getRange(vsYesterdayRow, column, 1, 2).clearContent();
-  
-  // Create the combined text with the variation
-  const combinedText = changeText + " vs. yesterday";
-  
-  // Set the cell with the combined text
-  const vsYesterdayCell = sheet.getRange(vsYesterdayRow, column, 1, 2).merge();
-  vsYesterdayCell.setValue(combinedText)
-                 .setFontSize(12)
-                 .setVerticalAlignment("middle")
-                 .setHorizontalAlignment("left");
-  
-  // Apply rich text formatting to color only the variation part
-  const richText = SpreadsheetApp.newRichTextValue()
-                                .setText(combinedText)
-                                .setTextStyle(0, changeText.length, 
-                                             SpreadsheetApp.newTextStyle()
-                                                           .setForegroundColor(changeColor)
-                                                           .setFontSize(12)
-                                                           .build())
-                                .setTextStyle(changeText.length, combinedText.length, 
-                                             SpreadsheetApp.newTextStyle()
-                                                           .setForegroundColor(DASHBOARD_COLORS.subText)
-                                                           .setFontSize(9)
-                                                           .build())
-                                .build();
-  
-  vsYesterdayCell.setRichTextValue(richText);
+  if (is5StarRating) {
+    // For 5-Star Ratings, show change in the second cell
+    sheet.getRange(row, column + 1)
+         .setValue(changeText)
+         .setFontSize(18)
+         .setFontColor(changeColor)
+         .setVerticalAlignment("middle")
+         .setHorizontalAlignment("left");
+  } else {
+    // For other tiles, merge cells and show "X vs. yesterday"
+    const vsYesterdayCell = sheet.getRange(row + 1, column, 1, 2).merge();
+    vsYesterdayCell.setValue(changeText + " vs. yesterday")
+                   .setFontSize(12)
+                   .setVerticalAlignment("middle")
+                   .setHorizontalAlignment("left");
+    
+    // Apply rich text formatting
+    const richText = SpreadsheetApp.newRichTextValue()
+                                  .setText(changeText + " vs. yesterday")
+                                  .setTextStyle(0, changeText.length, SpreadsheetApp.newTextStyle()
+                                                                      .setForegroundColor(changeColor)
+                                                                      .build())
+                                  .setTextStyle(changeText.length, changeText.length + " vs. yesterday".length, 
+                                               SpreadsheetApp.newTextStyle()
+                                                             .setForegroundColor(DASHBOARD_COLORS.subText)
+                                                             .build())
+                                  .build();
+    
+    vsYesterdayCell.setRichTextValue(richText);
+  }
 }
 
 /**
@@ -453,13 +464,13 @@ function testLayoutUtils() {
   setKpiRowHeights(sheet, startRow);
   
   // Create a sample KPI tile
-  formatTile(sheet.getRange(startRow, 1, 5, 1));
+  formatTile(sheet.getRange(startRow, 1, 5, 2));
   formatKpiTitle(sheet, startRow, 1, "Sample KPI");
   formatKpiValueWithChange(sheet, startRow + 1, 1, 42, 5);
   formatKpiSubtitle(sheet, startRow + 3, 1, "Sample subtitle");
   
   // Test section container
-  createSectionContainer(sheet, startRow + 6, 5, 1, 7, "Sample Section");
+  createSectionContainer(sheet, startRow + 6, 5, 1, 11, "Sample Section");
   
   Logger.log("Layout utilities test completed");
 }
