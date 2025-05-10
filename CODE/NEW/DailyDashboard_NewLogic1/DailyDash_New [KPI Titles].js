@@ -28,158 +28,58 @@ function createKPITiles(startRow) {
       return startRow + 7;
     }
     
-    // Get today's and yesterday's dates
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
+    // Get today's and yesterday's data
+    const todayData = getTodayData(dataSheetName);
+    const yesterdayData = getYesterdayData(dataSheetName);
     
-    // Format dates for comparison
-    const todayString = Utilities.formatDate(today, ss.getSpreadsheetTimeZone(), "yyyy-MM-dd");
-    const yesterdayString = Utilities.formatDate(yesterday, ss.getSpreadsheetTimeZone(), "yyyy-MM-dd");
-    
-    // Get all response data
-    const responseData = formSheet.getDataRange().getValues();
-    const headers = responseData[0]; // First row contains headers
-    
-    // Find important column indexes
-    const timestampCol = headers.indexOf("Timestamp");
-    let ratingCol = headers.findIndex(header => 
-      (typeof header === 'string') && (
-        header.includes("rate our services") || 
-        header.includes("1 to 5 stars") || 
-        header.includes("scale of 1 to 5")
-      )
-    );
-    
-    // Fallback: Try to find any column that might contain ratings
-    if (ratingCol === -1) {
-      ratingCol = headers.findIndex(header => 
-        (typeof header === 'string') && (
-          header.includes("rating") || 
-          header.includes("stars") || 
-          header.includes("score")
-        )
-      );
-    }
-
-    // Last resort: Check the last column (often contains rating in form responses)
-    if (ratingCol === -1) {
-      ratingCol = headers.length - 1;
-      Logger.log("Warning: Using last column as rating column");
-    }
-    
-    if (timestampCol === -1) {
-      Logger.log(`Error: Timestamp column not found in "${dataSheetName}" sheet`);
-      createEmptyKPITiles(sheet, startRow);
-      return startRow + 7;
-    }
-    
-    // Count submissions and calculate metrics
-    let todaySubmissions = 0;
-    let yesterdaySubmissions = 0;
-    let todayRatings = [];
-    let yesterdayRatings = [];
-    let todayFiveStars = 0;
-    let yesterdayFiveStars = 0;
-    let todayNegatives = 0;
-    let yesterdayNegatives = 0;
-    
-    // Process all responses (skipping header row)
-    for (let i = 1; i < responseData.length; i++) {
-      const row = responseData[i];
-      
-      // Skip rows with no timestamp
-      if (!row[timestampCol]) continue;
-      
-      // Format the timestamp for comparison
-      const responseDate = new Date(row[timestampCol]);
-      const responseDateString = Utilities.formatDate(responseDate, ss.getSpreadsheetTimeZone(), "yyyy-MM-dd");
-      
-      // Get the rating (1-5)
-      const rating = parseFloat(row[ratingCol]);
-      
-      // Check if it's today's submission
-      if (responseDateString === todayString) {
-        todaySubmissions++;
-        if (!isNaN(rating)) {
-          todayRatings.push(rating);
-          if (rating === 5) todayFiveStars++;
-          if (rating <= 2) todayNegatives++; // Count ratings of 1-2 as negative
-        }
-      }
-      // Check if it's yesterday's submission
-      else if (responseDateString === yesterdayString) {
-        yesterdaySubmissions++;
-        if (!isNaN(rating)) {
-          yesterdayRatings.push(rating);
-          if (rating === 5) yesterdayFiveStars++;
-          if (rating <= 2) yesterdayNegatives++;
-        }
-      }
-    }
-    
-    // Calculate averages and percentages
-    const todayAvgRating = todayRatings.length > 0 ? 
-      todayRatings.reduce((sum, rating) => sum + rating, 0) / todayRatings.length : 0;
-    
-    const yesterdayAvgRating = yesterdayRatings.length > 0 ? 
-      yesterdayRatings.reduce((sum, rating) => sum + rating, 0) / yesterdayRatings.length : 0;
-    
-    const todayNegativePercentage = todaySubmissions > 0 ? 
-      Math.round((todayNegatives / todaySubmissions) * 100) : 0;
-    
-    const yesterdayNegativePercentage = yesterdaySubmissions > 0 ? 
-      Math.round((yesterdayNegatives / yesterdaySubmissions) * 100) : 0;
-    
-    // Calculate day-over-day changes
-    const submissionChange = todaySubmissions - yesterdaySubmissions;
-    const avgRatingChange = parseFloat((todayAvgRating - yesterdayAvgRating).toFixed(1));
-    const fiveStarChange = todayFiveStars - yesterdayFiveStars;
-    const negativePercentageChange = todayNegativePercentage - yesterdayNegativePercentage;
+    // Calculate changes
+    const submissionChange = todayData.submissions - yesterdayData.submissions;
+    const avgRatingChange = parseFloat((todayData.averageRating - yesterdayData.averageRating).toFixed(1));
+    const fiveStarChange = todayData.fiveStarRatings - yesterdayData.fiveStarRatings;
+    const negativePercentageChange = todayData.negativePercentage - yesterdayData.negativePercentage;
     
     // Calculate percentage of 5-star ratings
-    const fiveStarPercentage = todaySubmissions > 0 ? 
-      Math.round((todayFiveStars / todaySubmissions) * 100) : 0;
+    const fiveStarPercentage = todayData.submissions > 0 ? 
+      Math.round((todayData.fiveStarRatings / todayData.submissions) * 100) : 0;
     
-    // Clear the KPI area and set up layout
-    clearSectionArea(sheet, startRow, 7, 15);
+    // Clear the KPI area and set up layout (reduced from 7 to 3 rows)
+    clearSectionArea(sheet, startRow, 3, 15);
     setDashboardColumnWidths(sheet);
     setKpiRowHeights(sheet, startRow);
     
     // Define KPI tiles configuration
-    // Inside createKPITiles function, update the kpiTiles array:
-const kpiTiles = [
-  {
-    title: "Submissions Today",
-    value: todaySubmissions,
-    change: submissionChange,
-    subtitle: "vs. yesterday",
-    column: 1  // Column A
-  },
-  {
-    title: "Average Rating",
-    value: todayAvgRating.toFixed(1),
-    change: avgRatingChange,
-    subtitle: "(out of 5.0)",
-    column: 4  // Column D (was 3)
-  },
-  {
-    title: "5-Star Ratings",
-    value: todayFiveStars,
-    change: fiveStarChange,
-    subtitle: fiveStarPercentage + "% of total",
-    column: 7  // Column G (was 5)
-  },
-  {
-    title: "% Negative Cases",
-    value: todayNegativePercentage + "%",
-    change: negativePercentageChange,
-    subtitle: "Action needed: " + todayNegatives + " cases",
-    column: 10  // Column J (was 7)
-  }
-];
+    const kpiTiles = [
+      {
+        title: "Submissions Today",
+        value: todayData.submissions,
+        change: submissionChange,
+        subtitle: "vs. yesterday",
+        column: 1  // Column A
+      },
+      {
+        title: "Average Rating",
+        value: todayData.averageRating.toFixed(1),
+        change: avgRatingChange,
+        subtitle: "", // Not used for Average Rating
+        column: 4  // Column D
+      },
+      {
+        title: "5-Star Ratings",
+        value: todayData.fiveStarRatings,
+        change: fiveStarChange,
+        subtitle: fiveStarPercentage + "% of total",
+        column: 7  // Column G
+      },
+      {
+        title: "% Negative Cases",
+        value: todayData.negativePercentage + "%",
+        change: negativePercentageChange,
+        subtitle: "Action needed: " + todayData.negativeCount + " cases",
+        column: 10  // Column J
+      }
+    ];
     
-    // Create each KPI tile with simpler direct approach
+    // Create each KPI tile
     for (let i = 0; i < kpiTiles.length; i++) {
       try {
         createSimpleKPITile(sheet, startRow, kpiTiles[i]);
@@ -189,24 +89,201 @@ const kpiTiles = [
       }
     }
     
-    // Add spacing after KPI section
-    addSectionSpacing(sheet, startRow + 6);
+    // Add spacing after KPI section (reduced from 6 to 2)
+    addSectionSpacing(sheet, startRow + 2);
+    
+    // Clear any content that might exist in rows beyond the KPI tiles
+    sheet.getRange(startRow + 3, 1, 5, 15).clearContent();
     
   } catch (error) {
     Logger.log(`Error in KPI tiles: ${error.message}`);
     createEmptyKPITiles(sheet, startRow);
   }
   
-  // Return the next available row
-  return startRow + 7;
+  // Return the next available row (reduced from 7 to 3)
+  return startRow + 3;
 }
 
 /**
- * Creates a single KPI tile with a simpler approach that avoids rich text formatting
- * @param {Sheet} sheet - The dashboard sheet
- * @param {number} startRow - The starting row
- * @param {Object} tileConfig - The tile configuration object
+ * Gets today's data from the specified data source
+ * @param {string} dataSheetName - The name of the data sheet
+ * @return {Object} - Object containing today's metrics
  */
+function getTodayData(dataSheetName) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const dataSheet = ss.getSheetByName(dataSheetName);
+  
+  if (!dataSheet) {
+    Logger.log(`Error: Data sheet "${dataSheetName}" not found`);
+    return getEmptyDataObject();
+  }
+  
+  const today = new Date();
+  const todayString = Utilities.formatDate(today, ss.getSpreadsheetTimeZone(), "yyyy-MM-dd");
+  
+  // Get all data
+  const data = dataSheet.getDataRange().getValues();
+  const headers = data[0];
+  
+  // Find column indexes
+  const timestampCol = headers.indexOf("Timestamp");
+  const ratingCol = headers.findIndex(header => 
+    header.includes("rate our services") || 
+    header.includes("scale of 1 to 5")
+  );
+  
+  if (timestampCol === -1) {
+    Logger.log("Error: Timestamp column not found");
+    return getEmptyDataObject();
+  }
+  
+  if (ratingCol === -1) {
+    Logger.log("Warning: Rating column not found, using last column");
+  }
+  
+  let submissions = 0;
+  let ratings = [];
+  let fiveStarRatings = 0;
+  let negativeCount = 0;
+  
+  // Process today's data
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    if (!row[timestampCol]) continue;
+    
+    const responseDate = new Date(row[timestampCol]);
+    const responseDateString = Utilities.formatDate(responseDate, ss.getSpreadsheetTimeZone(), "yyyy-MM-dd");
+    
+    if (responseDateString === todayString) {
+      submissions++;
+      
+      // Get rating value (use last column if rating column not found)
+      const ratingValue = row[ratingCol !== -1 ? ratingCol : row.length - 1];
+      const rating = parseFloat(ratingValue);
+      
+      if (!isNaN(rating)) {
+        ratings.push(rating);
+        if (rating === 5) fiveStarRatings++;
+        if (rating <= 2) negativeCount++; // Ratings 1-2 are considered negative
+      }
+    }
+  }
+  
+  const averageRating = ratings.length > 0 ? 
+    ratings.reduce((sum, r) => sum + r, 0) / ratings.length : 0;
+  
+  const negativePercentage = submissions > 0 ? 
+    Math.round((negativeCount / submissions) * 100) : 0;
+  
+  return {
+    submissions: submissions,
+    ratings: ratings,
+    fiveStarRatings: fiveStarRatings,
+    totalRatings: ratings.length,
+    averageRating: averageRating,
+    negativeCount: negativeCount,
+    negativePercentage: negativePercentage
+  };
+}
+
+/**
+ * Gets yesterday's data from the specified data source
+ * @param {string} dataSheetName - The name of the data sheet
+ * @return {Object} - Object containing yesterday's metrics
+ */
+function getYesterdayData(dataSheetName) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const dataSheet = ss.getSheetByName(dataSheetName);
+  
+  if (!dataSheet) {
+    Logger.log(`Error: Data sheet "${dataSheetName}" not found`);
+    return getEmptyDataObject();
+  }
+  
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayString = Utilities.formatDate(yesterday, ss.getSpreadsheetTimeZone(), "yyyy-MM-dd");
+  
+  // Get all data
+  const data = dataSheet.getDataRange().getValues();
+  const headers = data[0];
+  
+  // Find column indexes
+  const timestampCol = headers.indexOf("Timestamp");
+  const ratingCol = headers.findIndex(header => 
+    header.includes("rate our services") || 
+    header.includes("scale of 1 to 5")
+  );
+  
+  if (timestampCol === -1) {
+    Logger.log("Error: Timestamp column not found");
+    return getEmptyDataObject();
+  }
+  
+  if (ratingCol === -1) {
+    Logger.log("Warning: Rating column not found, using last column");
+  }
+  
+  let submissions = 0;
+  let ratings = [];
+  let fiveStarRatings = 0;
+  let negativeCount = 0;
+  
+  // Process yesterday's data
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    if (!row[timestampCol]) continue;
+    
+    const responseDate = new Date(row[timestampCol]);
+    const responseDateString = Utilities.formatDate(responseDate, ss.getSpreadsheetTimeZone(), "yyyy-MM-dd");
+    
+    if (responseDateString === yesterdayString) {
+      submissions++;
+      
+      // Get rating value (use last column if rating column not found)
+      const ratingValue = row[ratingCol !== -1 ? ratingCol : row.length - 1];
+      const rating = parseFloat(ratingValue);
+      
+      if (!isNaN(rating)) {
+        ratings.push(rating);
+        if (rating === 5) fiveStarRatings++;
+        if (rating <= 2) negativeCount++;
+      }
+    }
+  }
+  
+  const averageRating = ratings.length > 0 ? 
+    ratings.reduce((sum, r) => sum + r, 0) / ratings.length : 0;
+  
+  const negativePercentage = submissions > 0 ? 
+    Math.round((negativeCount / submissions) * 100) : 0;
+  
+  return {
+    submissions: submissions,
+    ratings: ratings,
+    fiveStarRatings: fiveStarRatings,
+    totalRatings: ratings.length,
+    averageRating: averageRating,
+    negativeCount: negativeCount,
+    negativePercentage: negativePercentage
+  };
+}
+
+/**
+ * Returns an empty data object with default values
+ * @return {Object} - Empty data object
+ */
+function getEmptyDataObject() {
+  return {
+    submissions: 0,
+    ratings: [],
+    fiveStarRatings: 0,
+    totalRatings: 0,
+    averageRating: 0,
+    negativeCount: 0,
+    negativePercentage: 0
+  };
+}
 
 /**
  * Creates a single KPI tile
@@ -215,10 +292,10 @@ const kpiTiles = [
  * @param {Object} tileConfig - The tile configuration object
  */
 function createSimpleKPITile(sheet, startRow, tileConfig) {
-  // Format the tile container to span 2 columns
-  formatTile(sheet.getRange(startRow, tileConfig.column, 5, 2));
+  // Format the tile container to span 2 columns and 3 rows ONLY
+  formatTile(sheet.getRange(startRow, tileConfig.column, 3, 2));
   
-  // Set the title to span both columns
+  // Set the title to span both columns (row 4)
   sheet.getRange(startRow, tileConfig.column, 1, 2)
        .merge()
        .setValue(tileConfig.title)
@@ -227,33 +304,67 @@ function createSimpleKPITile(sheet, startRow, tileConfig) {
        .setVerticalAlignment("middle")
        .setHorizontalAlignment("left");
   
-  // Check if this is the 5-Star Ratings tile
+  // Check tile types
   const isFiveStarRating = tileConfig.title === "5-Star Ratings";
+  const isNegativePercentage = tileConfig.title === "% Negative Cases";
+  const isAverageRating = tileConfig.title === "Average Rating";
+  const isSubmissionsToday = tileConfig.title === "Submissions Today";
   
-  // Set the main value with change indicator (each in its own column)
+  // Set the main value with change indicator (row 5)
   formatKpiValueWithChange(
     sheet, 
     startRow + 1, 
     tileConfig.column, 
     tileConfig.value, 
     tileConfig.change, 
-    tileConfig.title === "% Negative Cases",
-    isFiveStarRating
+    isNegativePercentage,  // Reverse colors for negative percentage
+    isFiveStarRating,
+    isAverageRating,
+    isSubmissionsToday
   );
   
-  // Set the subtitle to span both columns
-  sheet.getRange(startRow + 2, tileConfig.column, 1, 2)
-       .merge()
-       .setValue(tileConfig.subtitle)
-       .setFontSize(12)
-       .setFontColor("#666666")
-       .setVerticalAlignment("top")
-       .setHorizontalAlignment("left");
+  // Handle special cases for different tiles
+  if (isAverageRating) {
+    // For Average Rating, add "(out of 5.0)" next to the main value in row 5
+    sheet.getRange(startRow + 1, tileConfig.column + 1)
+         .setValue("(out of 5.0)")
+         .setFontSize(12)
+         .setFontWeight("bold")
+         .setFontColor("#666666")
+         .setVerticalAlignment("middle")
+         .setHorizontalAlignment("left");
+  } else if (isFiveStarRating) {
+    // For 5-Star Ratings, now same layout as Average Rating
+    // Percentage goes in row 5 next to main value
+    sheet.getRange(startRow + 1, tileConfig.column + 1)
+         .setValue(tileConfig.subtitle)
+         .setFontSize(12)
+         .setFontWeight("bold")  // Adding bold like with Average Rating's "(out of 5.0)""
+         .setFontColor("#666666")
+         .setVerticalAlignment("middle")
+         .setHorizontalAlignment("left");
+  } else if (isNegativePercentage) {
+    // For % Negative Cases, create a cell comment/note on row 6
+    const cell = sheet.getRange(startRow + 2, tileConfig.column, 1, 2).merge();
+    
+    // Parse the number of cases from the subtitle
+    const casesMatch = tileConfig.subtitle.match(/(\d+) cases/);
+    const numCases = casesMatch ? parseInt(casesMatch[1]) : 0;
+    
+    // Create the note text
+    const noteText = "Action needed: " + numCases + " cases";
+    
+    // Set the note on the cell
+    cell.setNote(noteText);
+  }
   
   // Apply yellow highlight bar for Average Rating only
-  if (tileConfig.title === "Average Rating") {
+  if (isAverageRating) {
     createYellowHighlightBar(sheet, startRow + 1, tileConfig.column);
   }
+  
+  // IMPORTANT: Clear any content that might exist in rows beyond the tile
+  sheet.getRange(startRow + 3, tileConfig.column, 5, 2).clearContent();
 }
 
 /**
@@ -262,8 +373,8 @@ function createSimpleKPITile(sheet, startRow, tileConfig) {
  * @param {number} startRow - The starting row
  */
 function createEmptyKPITiles(sheet, startRow) {
-  // Clear the KPI area and set up layout
-  clearSectionArea(sheet, startRow, 7, 15);
+  // Clear the KPI area and set up layout (reduced from 7 to 3 rows)
+  clearSectionArea(sheet, startRow, 3, 15);
   setDashboardColumnWidths(sheet);
   setKpiRowHeights(sheet, startRow);
   
@@ -273,29 +384,29 @@ function createEmptyKPITiles(sheet, startRow) {
       title: "Submissions Today",
       value: 0,
       change: 0,
-      subtitle: "vs. yesterday",
+      subtitle: "",  // Not used for Submissions Today
       column: 1  // Column A
     },
     {
       title: "Average Rating",
       value: "0.0",
       change: 0,
-      subtitle: "(out of 5.0)",
-      column: 3  // Column C
+      subtitle: "",  // Not used for Average Rating
+      column: 4  // Column D
     },
     {
       title: "5-Star Ratings",
       value: 0,
       change: 0,
       subtitle: "0% of total",
-      column: 5  // Column E
+      column: 7  // Column G
     },
     {
       title: "% Negative Cases",
       value: "0%",
       change: 0,
       subtitle: "Action needed: 0 cases",
-      column: 7  // Column G
+      column: 10  // Column J
     }
   ];
   
@@ -304,8 +415,11 @@ function createEmptyKPITiles(sheet, startRow) {
     createSimpleKPITile(sheet, startRow, tile);
   });
   
-  // Add spacing after KPI section
-  addSectionSpacing(sheet, startRow + 6);
+  // Add spacing after KPI section (reduced from 6 to 2)
+  addSectionSpacing(sheet, startRow + 2);
+  
+  // Clear any content that might exist in rows beyond the KPI tiles
+  sheet.getRange(startRow + 3, 1, 5, 15).clearContent();
 }
 
 /**
@@ -323,120 +437,15 @@ function testKPITilesSection() {
 }
 
 /**
- * Creates KPI tiles section with the main metrics
- * @param {number} startRow - The starting row for the section
- * @returns {number} - The next row after this section
+ * Test function to verify data retrieval functions work correctly
  */
-function createKPITiles(startRow) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('DailyDash');
-  const dataSource = getSelectedDataSource();
+function testDataRetrieval() {
+  const dataSheetName = getDataSourceSheet();
+  Logger.log(`Testing data retrieval for sheet: ${dataSheetName}`);
   
-  // Set row heights for the KPI section
-  setKpiRowHeights(sheet, startRow);
+  const todayData = getTodayData(dataSheetName);
+  Logger.log("Today's data: " + JSON.stringify(todayData));
   
-  // Create the KPI tiles
-  createSubmissionsTile(sheet, startRow, 1, dataSource);
-  createAverageRatingTile(sheet, startRow, 3, dataSource);
-  createFiveStarRatingsTile(sheet, startRow, 5, dataSource);
-  createNegativeCasesTile(sheet, startRow, 7, dataSource);
-  
-  // Add spacing after KPI section
-  addSectionSpacing(sheet, startRow + 6);
-}
-
-/**
- * Creates the Submissions Today KPI tile
- * @param {Sheet} sheet - The Google Sheet
- * @param {number} startRow - The starting row for the tile
- * @param {number} startCol - The starting column for the tile
- * @param {object} dataSource - The data source object
- */
-function createSubmissionsTile(sheet, startRow, startCol, dataSource) {
-  // Create tile container
-  formatTile(sheet.getRange(startRow, startCol, 5, 2));
-  
-  // Add title
-  formatKpiTitle(sheet, startRow, startCol, "Submissions Today");
-  
-  // Get today's and yesterday's data
-  const today = new Date();
-  const todayData = getTodayData(dataSource);
-  const yesterdayData = getYesterdayData(dataSource);
-  
-  // Calculate the KPI value and change
-  const submissionsToday = todayData ? todayData.submissions : 0;
-  const submissionsYesterday = yesterdayData ? yesterdayData.submissions : 0;
-  const change = submissionsToday - submissionsYesterday;
-  
-  // Format the KPI value with change indicator
-  formatKpiValueWithChange(sheet, startRow + 1, startCol, submissionsToday, change);
-  
-  // Add "vs. yesterday" text below the main value
-  sheet.getRange(startRow + 3, startCol)
-       .setValue("vs. yesterday")
-       .setFontSize(10)
-       .setFontColor(DASHBOARD_COLORS.subText)
-       .setVerticalAlignment("top")
-       .setHorizontalAlignment("left");
-       
-  // Move the change indicator below the "vs. yesterday" text
-  if (change !== 0) {
-    // Get the change indicator text and color from the current position
-    const changeCell = sheet.getRange(startRow + 1, startCol + 1);
-    const changeText = changeCell.getValue();
-    const changeColor = changeCell.getFontColor();
-    
-    // Clear the original change indicator
-    changeCell.clearContent();
-    
-    // Add the change indicator below the "vs. yesterday" text
-    sheet.getRange(startRow + 4, startCol)
-         .setValue(changeText)
-         .setFontSize(14)
-         .setFontColor(changeColor)
-         .setVerticalAlignment("top")
-         .setHorizontalAlignment("left");
-  }
-}
-
-/**
- * Creates the Five Star Ratings KPI tile with special handling
- * @param {Sheet} sheet - The Google Sheet
- * @param {number} startRow - The starting row for the tile
- * @param {number} startCol - The starting column for the tile
- * @param {object} dataSource - The data source object
- */
-function createFiveStarRatingsTile(sheet, startRow, startCol, dataSource) {
-  // Create tile container
-  formatTile(sheet.getRange(startRow, startCol, 5, 2));
-  
-  // Add title
-  formatKpiTitle(sheet, startRow, startCol, "5-Star Ratings");
-  
-  // Get today's and yesterday's data
-  const today = new Date();
-  const todayData = getTodayData(dataSource);
-  const yesterdayData = getYesterdayData(dataSource);
-  
-  // Calculate the KPI value and change
-  const fiveStarsToday = todayData ? todayData.fiveStarRatings : 0;
-  const fiveStarsYesterday = yesterdayData ? yesterdayData.fiveStarRatings : 0;
-  const change = fiveStarsToday - fiveStarsYesterday;
-  
-  // Format the KPI value with change indicator - use larger font for this specific tile
-  formatKpiValueWithChange(sheet, startRow + 1, startCol, fiveStarsToday, change);
-  
-  // Make the change indicator slightly larger for this tile
-  if (change !== 0) {
-    sheet.getRange(startRow + 1, startCol + 1)
-         .setFontSize(16); // Slightly larger than the default 14
-  }
-  
-  // Add "0% of total" text below the main value
-  sheet.getRange(startRow + 3, startCol)
-       .setValue(Math.round((fiveStarsToday / (todayData ? todayData.totalRatings : 1)) * 100) + "% of total")
-       .setFontSize(10)
-       .setFontColor(DASHBOARD_COLORS.subText)
-       .setVerticalAlignment("top")
-       .setHorizontalAlignment("left");
+  const yesterdayData = getYesterdayData(dataSheetName);
+  Logger.log("Yesterday's data: " + JSON.stringify(yesterdayData));
 }

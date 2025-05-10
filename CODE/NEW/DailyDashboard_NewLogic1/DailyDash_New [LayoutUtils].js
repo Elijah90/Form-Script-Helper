@@ -23,25 +23,39 @@ const DASHBOARD_COLORS = {
 
 /**
  * Sets up the standard dashboard column widths for proper layout
+ * Updated to decrease left column by 20% and increase right column
  * @param {Sheet} sheet - The Google Sheet to format
  */
 function setDashboardColumnWidths(sheet) {
-  // Set column widths for KPI tiles with proper width distribution and spacing
-  sheet.setColumnWidth(1, 110); // A - Main value column
-  sheet.setColumnWidth(2, 120);  // B - Change indicator column
-  sheet.setColumnWidth(3, 30);  // C - Spacer between tiles
-  sheet.setColumnWidth(4, 110); // D - Main value column
-  sheet.setColumnWidth(5, 120);  // E - Change indicator column
-  sheet.setColumnWidth(6, 30);  // F - Spacer between tiles
-  sheet.setColumnWidth(7, 110); // G - Main value column
-  sheet.setColumnWidth(8,120);  // H - Change indicator column
-  sheet.setColumnWidth(9, 30);  // I - Spacer between tiles
-  sheet.setColumnWidth(10, 110); // J - Main value column
-  sheet.setColumnWidth(11, 120);  // K - Change indicator column
+  // Set column widths for KPI tiles with adjusted distribution
+  sheet.setColumnWidth(1, 88);   // A - Main value column (was 110, now 88 = 80% of 110)
+  sheet.setColumnWidth(2, 142);  // B - Change indicator column (was 120, now 142 = 120 + 22)
+  sheet.setColumnWidth(3, 30);   // C - Spacer between tiles
+  sheet.setColumnWidth(4, 88);   // D - Main value column 
+  sheet.setColumnWidth(5, 142);  // E - Change indicator column
+  sheet.setColumnWidth(6, 30);   // F - Spacer between tiles
+  sheet.setColumnWidth(7, 88);   // G - Main value column
+  sheet.setColumnWidth(8, 142);  // H - Change indicator column
+  sheet.setColumnWidth(9, 30);   // I - Spacer between tiles
+  sheet.setColumnWidth(10, 88);  // J - Main value column
+  sheet.setColumnWidth(11, 142); // K - Change indicator column
   
   // Other columns for later sections
   sheet.setColumnWidth(15, 175); // O - Dashboard controls
   sheet.setColumnWidth(16, 175); // P - Dashboard controls
+}
+
+/**
+ * Sets standard row heights for KPI tiles
+ * Updated to remove rows 7 and 8
+ * @param {Sheet} sheet - The Google Sheet to format
+ * @param {number} startRow - The starting row for the KPI section
+ */
+function setKpiRowHeights(sheet, startRow) {
+  sheet.setRowHeight(startRow, 25);     // Title row
+  sheet.setRowHeight(startRow + 1, 50); // Main value row - taller for large text
+  sheet.setRowHeight(startRow + 2, 25); // Variation/subtitle row
+  // Removed rows 7 and 8
 }
 
 /**
@@ -357,8 +371,10 @@ function createSectionContainer(sheet, startRow, numRows, startCol, numCols, tit
  * @param {number} change - The change value
  * @param {boolean} reverseColors - Whether to reverse the color logic
  * @param {boolean} is5StarRating - Whether this is the 5-Star Ratings tile
+ * @param {boolean} isAverageRating - Whether this is the Average Rating tile
+ * @param {boolean} isSubmissionsToday - Whether this is the Submissions Today tile
  */
-function formatKpiValueWithChange(sheet, row, column, value, change, reverseColors = false, is5StarRating = false) {
+function formatKpiValueWithChange(sheet, row, column, value, change, reverseColors = false, is5StarRating = false, isAverageRating = false, isSubmissionsToday = false) {
   // Format the main value in the first column
   sheet.getRange(row, column)
        .setValue(value)
@@ -388,41 +404,38 @@ function formatKpiValueWithChange(sheet, row, column, value, change, reverseColo
   // Clear any previous content in the change indicator cell
   sheet.getRange(row, column + 1).clearContent();
   
-  if (is5StarRating) {
-    // For 5-Star Ratings, increase the size of the indicator in its original position
-    sheet.getRange(row, column + 1)
-         .setValue(changeText)
-         .setFontSize(18) // Increased font size for 5-Star Ratings
-         .setFontColor(changeColor)
-         .setVerticalAlignment("middle")
-         .setHorizontalAlignment("left");
-  } else {
-    // For other tiles, move the variation indicator to be part of the "vs. yesterday" text
-    // Clear the original position first
-    sheet.getRange(row + 1, column).clearContent();
-    
-    // Format the variation indicator with its color
-    const vsYesterdayCell = sheet.getRange(row + 1, column);
-    vsYesterdayCell.setValue(changeText + " vs. yesterday")
-                   .setFontSize(12)
-                   .setVerticalAlignment("middle")
-                   .setHorizontalAlignment("left");
-    
-    // Apply rich text formatting to color only the variation part
-    const richText = SpreadsheetApp.newRichTextValue()
-                                  .setText(changeText + " vs. yesterday")
-                                  .setTextStyle(0, changeText.length, SpreadsheetApp.newTextStyle()
-                                                                      .setForegroundColor(changeColor)
-                                                                      .build())
-                                  .setTextStyle(changeText.length, changeText.length + " vs. yesterday".length, 
-                                               SpreadsheetApp.newTextStyle()
-                                                             .setForegroundColor(DASHBOARD_COLORS.subText)
-                                                             .build())
-                                  .build();
-    
-    vsYesterdayCell.setRichTextValue(richText);
-  }
-
+  // All tiles now use the same format: variation + "vs. yesterday" in row 6
+  const vsYesterdayRow = row + 1;
+  
+  // Clear any existing content in that row for this tile's columns
+  sheet.getRange(vsYesterdayRow, column, 1, 2).clearContent();
+  
+  // Create the combined text with the variation
+  const combinedText = changeText + " vs. yesterday";
+  
+  // Set the cell with the combined text
+  const vsYesterdayCell = sheet.getRange(vsYesterdayRow, column, 1, 2).merge();
+  vsYesterdayCell.setValue(combinedText)
+                 .setFontSize(12)
+                 .setVerticalAlignment("middle")
+                 .setHorizontalAlignment("left");
+  
+  // Apply rich text formatting to color only the variation part
+  const richText = SpreadsheetApp.newRichTextValue()
+                                .setText(combinedText)
+                                .setTextStyle(0, changeText.length, 
+                                             SpreadsheetApp.newTextStyle()
+                                                           .setForegroundColor(changeColor)
+                                                           .setFontSize(12)
+                                                           .build())
+                                .setTextStyle(changeText.length, combinedText.length, 
+                                             SpreadsheetApp.newTextStyle()
+                                                           .setForegroundColor(DASHBOARD_COLORS.subText)
+                                                           .setFontSize(9)
+                                                           .build())
+                                .build();
+  
+  vsYesterdayCell.setRichTextValue(richText);
 }
 
 /**
