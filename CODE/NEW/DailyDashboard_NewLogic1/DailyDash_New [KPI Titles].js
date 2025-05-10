@@ -10,9 +10,13 @@ function createKPITiles(startRow) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName('DailyDash');
   
+  Logger.log("DEBUG: Starting createKPITiles function");
+  
   try {
     // Get the data source sheet name from config
+    Logger.log("DEBUG: About to get data source sheet name");
     const dataSheetName = getDataSourceSheet();
+    Logger.log(`DEBUG: Data sheet name: ${dataSheetName}`);
     
     // Get data from the configured data source sheet
     const formSheet = ss.getSheetByName(dataSheetName);

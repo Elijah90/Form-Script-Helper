@@ -15,17 +15,22 @@ function refreshDashboard() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName('DailyDash');
   
+  Logger.log("DEBUG: Starting dashboard refresh process");
+  
   // Always ensure dashboard controls exist
   if (!dashboardControlsExist()) {
+    Logger.log("DEBUG: Dashboard controls don't exist, adding them now");
     addDashboardControls();
     ss.toast("Dashboard controls have been set up. Select your data source and press Refresh again.", 
              "Setup Complete", 5);
     return;
   }
   
+  Logger.log("DEBUG: About to get data source sheet name");
   // Get the selected data source
   const dataSource = getDataSourceSheet(); // Changed from getSelectedDataSource to getDataSourceSheet
-  Logger.log(`Starting dashboard refresh with data source: ${dataSource}`);
+  Logger.log(`DEBUG: Data source retrieved: ${dataSource}`);
+  
   if (!dataSource) {
     ss.toast("Please select a data source from the dropdown first", "Data Source Required", 3);
     return;
@@ -43,16 +48,21 @@ function refreshDashboard() {
   
   try {
     // Update the config to match the dropdown (synchronize both)
+    Logger.log("DEBUG: About to set data source sheet");
     setDataSourceSheet(dataSource);
     
     // Create header and get the next row
+    Logger.log("DEBUG: About to create dashboard header");
     let nextRow = createDashboardHeader();
     Logger.log("Header refreshed. Next row: " + nextRow);
     
     // Add KPI tiles when implemented
     if (typeof createKPITiles === 'function') {
+      Logger.log("DEBUG: About to create KPI tiles");
       nextRow = createKPITiles(nextRow);
       Logger.log("KPI tiles refreshed. Next row: " + nextRow);
+    } else {
+      Logger.log("DEBUG: createKPITiles function not found");
     }
     
     // Add Rep Performance table when implemented
@@ -101,6 +111,7 @@ function refreshDashboard() {
   } catch (error) {
     // Log any errors
     Logger.log("Error refreshing dashboard: " + error.message);
+    Logger.log("DEBUG: Error stack trace: " + error.stack);
     ss.toast("Error refreshing dashboard: " + error.message, "Refresh Error", 5);
     
     // Ensure controls are restored even if there's an error
