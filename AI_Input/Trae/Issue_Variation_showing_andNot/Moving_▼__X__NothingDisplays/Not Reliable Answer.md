@@ -1,3 +1,5 @@
+#
+
 > **User Prompt:**
 
 """
@@ -21,7 +23,7 @@ Note the file importnt files and/or folders:
 
 ---
 
->  **AI Response:**
+> **AI Response:**
 
 # CASAMANCE Dashboard KPI Tiles Variation Indicators Fix
 
