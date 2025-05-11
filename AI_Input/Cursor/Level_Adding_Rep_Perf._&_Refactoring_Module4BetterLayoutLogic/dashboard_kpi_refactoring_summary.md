@@ -2,7 +2,7 @@
 
 ## Session 1: Initial 3-Row KPI Structure Implementation
 
-### User Goal Summary:
+### User Goal Summary (First Prompt)
 
 The user reported that the KPI tiles display was not as desired. The goal was to refactor the KPI tiles to a compact 3-row structure per tile (Title, Value + Optional Secondary Info, Change Indicator Line) to match a target visual (`DailyDash1__Moving_▼__X__DisplaysSUCCESS.png` / `Screenshot 2025-05-11 at 9.30.54 AM.png`). This involved:
 
@@ -56,7 +56,7 @@ The user reported that the KPI tiles display was not as desired. The goal was to
 
 ## Session 2: Refinement and Troubleshooting of 3-Row KPI Structure
 
-### User Goal Summary
+### User Goal Summary (Second Prompt)
 
 The user reported that the changes from Session 1 resulted in a worse visual state ("State B" - `Screenshot 2025-05-11 at 9.22.55 AM.png`), where an unexpected 4th row of content (the original subtitles) appeared within the KPI tiles. The goal remained to achieve the desired 3-row compact structure ("State C" - `Screenshot 2025-05-11 at 9.30.54 AM.png`).
 
