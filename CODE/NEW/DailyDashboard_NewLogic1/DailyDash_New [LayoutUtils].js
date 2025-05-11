@@ -91,9 +91,6 @@ function setKpiRowHeights(sheet, startRow) {
   sheet.setRowHeight(startRow, 25);     // Title row
   sheet.setRowHeight(startRow + 1, 50); // Main value row - taller for large text
   sheet.setRowHeight(startRow + 2, 25); // Change indicator/subtitle row
-  sheet.setRowHeight(startRow + 3, 25); // Additional info row
-  sheet.setRowHeight(startRow + 4, 20); // Color bar row (for Average Rating)
-  // Only 5 rows total for KPI tiles
 }
 
 /**
@@ -387,23 +384,54 @@ function createSectionContainer(sheet, startRow, numRows, startCol, numCols, tit
  * @param {any} value - The main KPI value
  * @param {number} change - The change value
  * @param {boolean} reverseColors - Whether to reverse the color logic
- * @param {boolean} is5StarRating - Whether this is the 5-Star Ratings tile
+ * @param {string} tileTitle - The title of the tile
+ * @param {string} tileSubtitle - The subtitle of the tile
  */
-function formatKpiValueWithChange(sheet, row, column, value, change, reverseColors = false, is5StarRating = false) {
-  // Format the main value in the first cell
-  sheet.getRange(row, column)
-       .setValue(value)
+function formatKpiValueWithChange(sheet, row, column, value, change, reverseColors = false, tileTitle = "", tileSubtitle = "") {
+  // Main value in the first cell of the current row (valueRow)
+  const mainValueCell = sheet.getRange(row, column);
+  mainValueCell.clearContent().clearDataValidations().clearNote(); // Explicitly clear
+  mainValueCell.setValue(value)
        .setFontSize(36)
        .setFontWeight("bold")
        .setFontColor(DASHBOARD_COLORS.headerText)
        .setVerticalAlignment("middle")
        .setHorizontalAlignment("left")
        .setNumberFormat("@");
-  
+
+  // Adjacent cell in the value row for secondary info
+  const secondaryInfoCell = sheet.getRange(row, column + 1);
+  secondaryInfoCell.clearContent().clearDataValidations().clearNote(); // Explicitly clear
+
+  // Handle specific content for Average Rating and 5-Star Ratings
+  if (tileTitle === "Average Rating") {
+    secondaryInfoCell.setValue("(out of 5.0)")
+         .setFontSize(12)
+         .setFontColor(DASHBOARD_COLORS.subText)
+         .setVerticalAlignment("middle") // Changed from bottom
+         .setHorizontalAlignment("left");
+  } else if (tileTitle === "5-Star Ratings") {
+    secondaryInfoCell.setValue(tileSubtitle) // tileSubtitle is "X% of total"
+         .setFontSize(12)
+         .setFontColor(DASHBOARD_COLORS.subText)
+         .setVerticalAlignment("middle") // Changed from bottom
+         .setHorizontalAlignment("left");
+  } else {
+    // Ensure it's blank for other tiles
+    secondaryInfoCell.clearContent();
+  }
+
+  // Change indicator row (valueRow + 1, which is startRow + 2)
+  const changeIndicatorRow = row + 1;
+  const changeCell = sheet.getRange(changeIndicatorRow, column, 1, 2);
+  // Clear, unmerge, then merge to ensure clean state
+  changeCell.clearContent().clearDataValidations().clearNote().unmerge(); 
+  changeCell.merge();
+
   // Create the change indicator text
   let changeText = "";
   let changeColor = DASHBOARD_COLORS.subText;
-  
+
   if (change > 0) {
     changeText = "▲ " + Math.abs(change);
     changeColor = reverseColors ? DASHBOARD_COLORS.negative : DASHBOARD_COLORS.positive;
@@ -411,48 +439,38 @@ function formatKpiValueWithChange(sheet, row, column, value, change, reverseColo
     changeText = "▼ " + Math.abs(change);
     changeColor = reverseColors ? DASHBOARD_COLORS.positive : DASHBOARD_COLORS.negative;
   } else {
-    changeText = "— 0";
+    changeText = "— 0"; 
     changeColor = DASHBOARD_COLORS.neutralChange;
   }
   
-  // Clear the second cell
-  sheet.getRange(row, column + 1).clearContent();
-  sheet.getRange(row + 1, column, 1, 2).unmerge();
+  const fullChangeText = changeText + " vs. yesterday";
+
+  try {
+    const richText = SpreadsheetApp.newRichTextValue()
+                                  .setText(fullChangeText)
+                                  .setTextStyle(0, changeText.length, SpreadsheetApp.newTextStyle()
+                                                                      .setForegroundColor(changeColor)
+                                                                      .build())
+                                  .setTextStyle(changeText.length, fullChangeText.length, 
+                                               SpreadsheetApp.newTextStyle()
+                                                             .setForegroundColor(DASHBOARD_COLORS.subText)
+                                                             .build())
+                                  .build();
+    changeCell.setRichTextValue(richText);
+  } catch (e) {
+    changeCell.setValue(fullChangeText).setFontColor(changeColor);
+    Logger.log("Rich text failed for change indicator: " + e.toString());
+  }
   
-  if (is5StarRating) {
-    // For 5-Star Ratings, show change in the second cell
-    sheet.getRange(row, column + 1)
-         .setValue(changeText)
-         .setFontSize(18)
-         .setFontColor(changeColor)
-         .setVerticalAlignment("middle")
-         .setHorizontalAlignment("left");
+  changeCell.setFontSize(12)
+            .setVerticalAlignment("middle")
+            .setHorizontalAlignment("left");
+
+  if (tileTitle === "% Negative Cases") {
+    changeCell.setNote(tileSubtitle); 
   } else {
-    // For other tiles, show change indicator with "vs. yesterday"
-    const vsYesterdayCell = sheet.getRange(row + 1, column);
-    vsYesterdayCell.setValue(changeText + " vs. yesterday")
-                   .setFontSize(12)
-                   .setVerticalAlignment("middle")
-                   .setHorizontalAlignment("left");
-    
-    // Apply rich text formatting
-    try {
-      const richText = SpreadsheetApp.newRichTextValue()
-                                    .setText(changeText + " vs. yesterday")
-                                    .setTextStyle(0, changeText.length, SpreadsheetApp.newTextStyle()
-                                                                        .setForegroundColor(changeColor)
-                                                                        .build())
-                                    .setTextStyle(changeText.length, changeText.length + " vs. yesterday".length, 
-                                                 SpreadsheetApp.newTextStyle()
-                                                               .setForegroundColor(DASHBOARD_COLORS.subText)
-                                                               .build())
-                                    .build();
-      
-      vsYesterdayCell.setRichTextValue(richText);
-    } catch (e) {
-      // Fallback if rich text fails
-      vsYesterdayCell.setFontColor(changeColor);
-    }
+    // Ensure no note for other tiles on this cell unless specifically set
+    changeCell.clearNote();
   }
 }
 

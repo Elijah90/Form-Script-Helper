@@ -28,7 +28,7 @@ function refreshDashboard() {
   
   Logger.log("DEBUG: About to get data source sheet name");
   // Get the selected data source
-  const dataSource = getDataSourceSheet(); // Changed from getSelectedDataSource to getDataSourceSheet
+  const dataSource = getDataSourceSheet();
   Logger.log(`DEBUG: Data source retrieved: ${dataSource}`);
   
   if (!dataSource) {
@@ -47,6 +47,12 @@ function refreshDashboard() {
   Logger.log("Starting dashboard refresh with data source: " + dataSource);
   
   try {
+    // Format the background color first
+    if (typeof formatDashboardBackground === 'function') {
+      Logger.log("DEBUG: Formatting dashboard background");
+      formatDashboardBackground();
+    }
+    
     // Update the config to match the dropdown (synchronize both)
     Logger.log("DEBUG: About to set data source sheet");
     setDataSourceSheet(dataSource);
@@ -59,8 +65,15 @@ function refreshDashboard() {
     // Add KPI tiles
     if (typeof createKPITiles === 'function') {
       Logger.log("DEBUG: About to create KPI tiles");
-      nextRow = createKPITiles(nextRow);
-      Logger.log("KPI tiles refreshed. Next row: " + nextRow);
+      try {
+        nextRow = createKPITiles(nextRow);
+        Logger.log("KPI tiles refreshed. Next row: " + nextRow);
+      } catch (kpiError) {
+        Logger.log("ERROR creating KPI tiles: " + kpiError.message);
+        Logger.log("ERROR stack: " + kpiError.stack);
+        // Try to continue with other sections
+        nextRow += 5; // Skip 5 rows for failed KPI tiles
+      }
     } else {
       Logger.log("DEBUG: createKPITiles function not found");
     }
@@ -68,8 +81,14 @@ function refreshDashboard() {
     // Add Rep Performance table
     if (typeof createRepPerformanceTable === 'function') {
       Logger.log("DEBUG: About to create Rep Performance table");
-      nextRow = createRepPerformanceTable(nextRow);
-      Logger.log("Rep Performance table refreshed. Next row: " + nextRow);
+      try {
+        nextRow = createRepPerformanceTable(nextRow);
+        Logger.log("Rep Performance table refreshed. Next row: " + nextRow);
+      } catch (repError) {
+        Logger.log("ERROR creating Rep Performance table: " + repError.message);
+        // Try to continue with other sections
+        nextRow += 10; // Skip 10 rows for failed Rep Performance table
+      }
     } else {
       Logger.log("DEBUG: createRepPerformanceTable function not found");
     }

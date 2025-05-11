@@ -22,10 +22,8 @@ function createKPITiles(startRow) {
     const formSheet = ss.getSheetByName(dataSheetName);
     if (!formSheet) {
       Logger.log(`Error: Data sheet "${dataSheetName}" not found`);
-      
-      // Even if the data sheet is not found, create empty KPI tiles
       createEmptyKPITiles(sheet, startRow);
-      return startRow + 5; // Changed from 7 to 5
+      return startRow + 3; // Adjusted for 3-row KPI tiles
     }
     
     // Get today's and yesterday's dates
@@ -71,7 +69,7 @@ function createKPITiles(startRow) {
     if (timestampCol === -1) {
       Logger.log(`Error: Timestamp column not found in "${dataSheetName}" sheet`);
       createEmptyKPITiles(sheet, startRow);
-      return startRow + 5; // Changed from 7 to 5
+      return startRow + 3; // Adjusted for 3-row KPI tiles
     }
     
     // Count submissions and calculate metrics
@@ -141,10 +139,10 @@ function createKPITiles(startRow) {
     const fiveStarPercentage = todaySubmissions > 0 ? 
       Math.round((todayFiveStars / todaySubmissions) * 100) : 0;
     
-    // Clear the KPI area and set up layout
-    clearSectionArea(sheet, startRow, 5, 15); // Changed from 7 to 5
+    // Clear the KPI area and set up layout for 3-row KPIs
+    clearSectionArea(sheet, startRow, 3, 15); 
     setDashboardColumnWidths(sheet);
-    setKpiRowHeights(sheet, startRow);
+    setKpiRowHeights(sheet, startRow); // This now sets for 3 rows
     
     // Define KPI tiles configuration using flexible layout
     const kpiTiles = [
@@ -188,16 +186,16 @@ function createKPITiles(startRow) {
       }
     }
     
-    // Add spacing after KPI section
-    addSectionSpacing(sheet, startRow + 4); // Changed from startRow + 6
+    // Add spacing after KPI section (after 3 rows)
+    addSectionSpacing(sheet, startRow + 2); 
     
   } catch (error) {
     Logger.log(`Error in KPI tiles: ${error.message}`);
     createEmptyKPITiles(sheet, startRow);
   }
   
-  // Return the next available row
-  return startRow + 5; // Changed from 7 to 5
+  // Return the next available row (startRow + 3 rows for KPIs)
+  return startRow + 3;
 }
 
 /**
@@ -207,46 +205,26 @@ function createKPITiles(startRow) {
  * @param {Object} tileConfig - The tile configuration object
  */
 function createSimpleKPITile(sheet, startRow, tileConfig) {
-  // Format the tile container (spans 2 columns, 5 rows)
-  formatTile(sheet.getRange(startRow, tileConfig.column, 5, 2));
+  // Format the tile container (spans 2 columns, 3 rows for Title, Value, Change)
+  formatTile(sheet.getRange(startRow, tileConfig.column, 3, 2));
   
-  // Set the title (merged across both columns)
+  // Set the title (merged across both columns in the first row of the tile)
   formatKpiTitle(sheet, startRow, tileConfig.column, tileConfig.title);
   
-  // Check if this is the 5-Star Ratings tile
-  const isFiveStarRating = tileConfig.title === "5-Star Ratings";
-  
-  // Check if this is the Submissions Today tile
-  const isSubmissionsToday = tileConfig.title === "Submissions Today";
-  
-  // Set the main value with change indicator
+  // Set the main value, potential secondary value, and change indicator line
+  // formatKpiValueWithChange handles row startRow + 1 (for value) and startRow + 2 (for change line)
   formatKpiValueWithChange(
     sheet, 
-    startRow + 1, 
+    startRow + 1, // This is the row for the main KPI value
     tileConfig.column, 
     tileConfig.value, 
     tileConfig.change, 
-    tileConfig.title === "% Negative Cases",
-    isFiveStarRating
+    tileConfig.title === "% Negative Cases", // reverseColors logic
+    tileConfig.title,                     // Pass tile title for specific layout logic
+    tileConfig.subtitle                   // Pass subtitle for specific content (e.g., note or 5-star %)
   );
   
-  // Handle special case for Submissions Today - just show "vs. yesterday" without change indicator
-  if (isSubmissionsToday) {
-    // Clear any merged cells first
-    sheet.getRange(startRow + 2, tileConfig.column, 1, 2).unmerge();
-    // Just show "vs. yesterday"
-    sheet.getRange(startRow + 2, tileConfig.column)
-         .setValue("vs. yesterday")
-         .setFontSize(12)
-         .setFontColor(DASHBOARD_COLORS.subText)
-         .setVerticalAlignment("middle")
-         .setHorizontalAlignment("left");
-  }
-  
-  // Set the subtitle (merged across both columns)
-  formatKpiSubtitle(sheet, startRow + 3, tileConfig.column, tileConfig.subtitle);
-  
-  // Apply yellow highlight bar for Average Rating only
+  // Apply yellow highlight bar for Average Rating only on the value row
   if (tileConfig.title === "Average Rating") {
     createYellowHighlightBar(sheet, startRow + 1, tileConfig.column);
   }
@@ -258,12 +236,12 @@ function createSimpleKPITile(sheet, startRow, tileConfig) {
  * @param {number} startRow - The starting row
  */
 function createEmptyKPITiles(sheet, startRow) {
-  // Clear the KPI area and set up layout
-  clearSectionArea(sheet, startRow, 5, 15); // Changed from 7 to 5
+  // Clear the KPI area and set up layout for 3-row KPIs
+  clearSectionArea(sheet, startRow, 3, 15); 
   setDashboardColumnWidths(sheet);
-  setKpiRowHeights(sheet, startRow);
+  setKpiRowHeights(sheet, startRow); // This now sets for 3 rows
   
-  // Define KPI tiles with empty values
+  // Define KPI tiles with empty values using the same columns as the main function
   const kpiTiles = [
     {
       title: "Submissions Today",
@@ -277,21 +255,21 @@ function createEmptyKPITiles(sheet, startRow) {
       value: "0.0",
       change: 0,
       subtitle: "(out of 5.0)",
-      column: 4  // Column D
+      column: 4  // Column D (match main function)
     },
     {
       title: "5-Star Ratings",
       value: 0,
       change: 0,
       subtitle: "0% of total",
-      column: 7  // Column G
+      column: 7  // Column G (match main function)
     },
     {
       title: "% Negative Cases",
       value: "0%",
       change: 0,
       subtitle: "Action needed: 0 cases",
-      column: 10  // Column J
+      column: 10  // Column J (match main function)
     }
   ];
   
@@ -300,8 +278,8 @@ function createEmptyKPITiles(sheet, startRow) {
     createSimpleKPITile(sheet, startRow, tile);
   });
   
-  // Add spacing after KPI section
-  addSectionSpacing(sheet, startRow + 4); // Changed from startRow + 6
+  // Add spacing after KPI section (after 3 rows)
+  addSectionSpacing(sheet, startRow + 2);
 }
 
 /**
