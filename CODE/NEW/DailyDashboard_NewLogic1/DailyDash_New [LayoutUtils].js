@@ -93,6 +93,7 @@ function setKpiRowHeights(sheet, startRow) {
   sheet.setRowHeight(startRow + 2, 25); // Change indicator/subtitle row
   sheet.setRowHeight(startRow + 3, 25); // Additional info row
   sheet.setRowHeight(startRow + 4, 20); // Color bar row (for Average Rating)
+  // Only 5 rows total for KPI tiles
 }
 
 /**
@@ -416,6 +417,7 @@ function formatKpiValueWithChange(sheet, row, column, value, change, reverseColo
   
   // Clear the second cell
   sheet.getRange(row, column + 1).clearContent();
+  sheet.getRange(row + 1, column, 1, 2).unmerge();
   
   if (is5StarRating) {
     // For 5-Star Ratings, show change in the second cell
@@ -426,26 +428,31 @@ function formatKpiValueWithChange(sheet, row, column, value, change, reverseColo
          .setVerticalAlignment("middle")
          .setHorizontalAlignment("left");
   } else {
-    // For other tiles, merge cells and show "X vs. yesterday"
-    const vsYesterdayCell = sheet.getRange(row + 1, column, 1, 2).merge();
+    // For other tiles, show change indicator with "vs. yesterday"
+    const vsYesterdayCell = sheet.getRange(row + 1, column);
     vsYesterdayCell.setValue(changeText + " vs. yesterday")
                    .setFontSize(12)
                    .setVerticalAlignment("middle")
                    .setHorizontalAlignment("left");
     
     // Apply rich text formatting
-    const richText = SpreadsheetApp.newRichTextValue()
-                                  .setText(changeText + " vs. yesterday")
-                                  .setTextStyle(0, changeText.length, SpreadsheetApp.newTextStyle()
-                                                                      .setForegroundColor(changeColor)
-                                                                      .build())
-                                  .setTextStyle(changeText.length, changeText.length + " vs. yesterday".length, 
-                                               SpreadsheetApp.newTextStyle()
-                                                             .setForegroundColor(DASHBOARD_COLORS.subText)
-                                                             .build())
-                                  .build();
-    
-    vsYesterdayCell.setRichTextValue(richText);
+    try {
+      const richText = SpreadsheetApp.newRichTextValue()
+                                    .setText(changeText + " vs. yesterday")
+                                    .setTextStyle(0, changeText.length, SpreadsheetApp.newTextStyle()
+                                                                        .setForegroundColor(changeColor)
+                                                                        .build())
+                                    .setTextStyle(changeText.length, changeText.length + " vs. yesterday".length, 
+                                                 SpreadsheetApp.newTextStyle()
+                                                               .setForegroundColor(DASHBOARD_COLORS.subText)
+                                                               .build())
+                                    .build();
+      
+      vsYesterdayCell.setRichTextValue(richText);
+    } catch (e) {
+      // Fallback if rich text fails
+      vsYesterdayCell.setFontColor(changeColor);
+    }
   }
 }
 

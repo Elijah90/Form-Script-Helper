@@ -25,7 +25,7 @@ function createKPITiles(startRow) {
       
       // Even if the data sheet is not found, create empty KPI tiles
       createEmptyKPITiles(sheet, startRow);
-      return startRow + 7;
+      return startRow + 5; // Changed from 7 to 5
     }
     
     // Get today's and yesterday's dates
@@ -71,7 +71,7 @@ function createKPITiles(startRow) {
     if (timestampCol === -1) {
       Logger.log(`Error: Timestamp column not found in "${dataSheetName}" sheet`);
       createEmptyKPITiles(sheet, startRow);
-      return startRow + 7;
+      return startRow + 5; // Changed from 7 to 5
     }
     
     // Count submissions and calculate metrics
@@ -142,7 +142,7 @@ function createKPITiles(startRow) {
       Math.round((todayFiveStars / todaySubmissions) * 100) : 0;
     
     // Clear the KPI area and set up layout
-    clearSectionArea(sheet, startRow, 7, 15);
+    clearSectionArea(sheet, startRow, 5, 15); // Changed from 7 to 5
     setDashboardColumnWidths(sheet);
     setKpiRowHeights(sheet, startRow);
     
@@ -189,7 +189,7 @@ function createKPITiles(startRow) {
     }
     
     // Add spacing after KPI section
-    addSectionSpacing(sheet, startRow + 6);
+    addSectionSpacing(sheet, startRow + 4); // Changed from startRow + 6
     
   } catch (error) {
     Logger.log(`Error in KPI tiles: ${error.message}`);
@@ -197,7 +197,7 @@ function createKPITiles(startRow) {
   }
   
   // Return the next available row
-  return startRow + 7;
+  return startRow + 5; // Changed from 7 to 5
 }
 
 /**
@@ -207,7 +207,7 @@ function createKPITiles(startRow) {
  * @param {Object} tileConfig - The tile configuration object
  */
 function createSimpleKPITile(sheet, startRow, tileConfig) {
-  // Format the tile container (spans 2 columns)
+  // Format the tile container (spans 2 columns, 5 rows)
   formatTile(sheet.getRange(startRow, tileConfig.column, 5, 2));
   
   // Set the title (merged across both columns)
@@ -215,6 +215,9 @@ function createSimpleKPITile(sheet, startRow, tileConfig) {
   
   // Check if this is the 5-Star Ratings tile
   const isFiveStarRating = tileConfig.title === "5-Star Ratings";
+  
+  // Check if this is the Submissions Today tile
+  const isSubmissionsToday = tileConfig.title === "Submissions Today";
   
   // Set the main value with change indicator
   formatKpiValueWithChange(
@@ -227,8 +230,21 @@ function createSimpleKPITile(sheet, startRow, tileConfig) {
     isFiveStarRating
   );
   
+  // Handle special case for Submissions Today - just show "vs. yesterday" without change indicator
+  if (isSubmissionsToday) {
+    // Clear any merged cells first
+    sheet.getRange(startRow + 2, tileConfig.column, 1, 2).unmerge();
+    // Just show "vs. yesterday"
+    sheet.getRange(startRow + 2, tileConfig.column)
+         .setValue("vs. yesterday")
+         .setFontSize(12)
+         .setFontColor(DASHBOARD_COLORS.subText)
+         .setVerticalAlignment("middle")
+         .setHorizontalAlignment("left");
+  }
+  
   // Set the subtitle (merged across both columns)
-  formatKpiSubtitle(sheet, startRow + 2, tileConfig.column, tileConfig.subtitle);
+  formatKpiSubtitle(sheet, startRow + 3, tileConfig.column, tileConfig.subtitle);
   
   // Apply yellow highlight bar for Average Rating only
   if (tileConfig.title === "Average Rating") {
@@ -243,7 +259,7 @@ function createSimpleKPITile(sheet, startRow, tileConfig) {
  */
 function createEmptyKPITiles(sheet, startRow) {
   // Clear the KPI area and set up layout
-  clearSectionArea(sheet, startRow, 7, 15);
+  clearSectionArea(sheet, startRow, 5, 15); // Changed from 7 to 5
   setDashboardColumnWidths(sheet);
   setKpiRowHeights(sheet, startRow);
   
@@ -285,7 +301,7 @@ function createEmptyKPITiles(sheet, startRow) {
   });
   
   // Add spacing after KPI section
-  addSectionSpacing(sheet, startRow + 6);
+  addSectionSpacing(sheet, startRow + 4); // Changed from startRow + 6
 }
 
 /**
