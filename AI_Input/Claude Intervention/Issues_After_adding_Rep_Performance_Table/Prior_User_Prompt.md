@@ -1,5 +1,6 @@
 # USER PROMPT BEFORE AI GO CONFUSED ON HEADER WIDTH & LAYOUT
 
+"""
 Okay it worked but I have three group of issues now (as per screenshots)
 
 • Group1:  the KPI tiles area you may see in 'Screenshot 20250510 at 4.44.53 PM.png' then see, after zooming in 'Screenshot 20250510 at 4.43.34 PM.png'
@@ -23,3 +24,4 @@ Okay it worked but I have three group of issues now (as per screenshots)
 ## Thoroughly answer and provide one prompt to each group. I will say 'CONTINUE' for you to provide the rest. you will attend to groups in this sequent 1 --> 2 --> 3
 
 Find attached as well the code you create  (for context) in the alternative version of this conversaiton.
+"""
