@@ -244,22 +244,63 @@ function createSimpleKPITile(sheet, startRow, tileConfig) {
   const changeCell = sheet.getRange(startRow + 2, tileConfig.column, 1, 2);
   changeCell.merge();
   
-  // Format the change indicator with appropriate color
+  // Format the change indicator with appropriate color based on the KPI type
   const changeValue = tileConfig.change;
-  const isNegative = tileConfig.title === "% Negative Cases" ? changeValue < 0 : changeValue > 0;
-  const isPositive = tileConfig.title === "% Negative Cases" ? changeValue > 0 : changeValue < 0;
+  let changeColor = DASHBOARD_COLORS.neutral; // Default color
+  let changeSymbol = "";
+  
+  // Apply different color logic based on the KPI type
+  if (tileConfig.title === "Submissions Today") {
+    // Submissions Today: Red if down >20%, Orange if down <20% or no change
+    if (changeValue < 0) {
+      // Calculate percentage change
+      const percentChange = Math.abs(changeValue) / (tileConfig.value - changeValue) * 100;
+      if (percentChange > 20) {
+        changeColor = DASHBOARD_COLORS.negative;
+      } else {
+        changeColor = DASHBOARD_COLORS.warning;
+      }
+      changeSymbol = "▼";
+    } else if (changeValue > 0) {
+      changeColor = DASHBOARD_COLORS.positive;
+      changeSymbol = "▲";
+    } else {
+      // No change (zero)
+      changeColor = DASHBOARD_COLORS.warning;
+      changeSymbol = "";
+    }
+  } else if (tileConfig.title === "Average Rating" || tileConfig.title === "5-Star Ratings") {
+    // Average Rating & 5-Star Ratings: Red if down, Orange if no change, Green if up
+    if (changeValue < 0) {
+      changeColor = DASHBOARD_COLORS.negative;
+      changeSymbol = "▼";
+    } else if (changeValue > 0) {
+      changeColor = DASHBOARD_COLORS.positive;
+      changeSymbol = "▲";
+    } else {
+      // No change (zero)
+      changeColor = DASHBOARD_COLORS.warning;
+      changeSymbol = "";
+    }
+  } else if (tileConfig.title === "% Negative Cases") {
+    // % Negative Cases: Green if down, Orange if no change, Red if up
+    if (changeValue < 0) {
+      changeColor = DASHBOARD_COLORS.positive;
+      changeSymbol = "▼";
+    } else if (changeValue > 0) {
+      changeColor = DASHBOARD_COLORS.negative;
+      changeSymbol = "▲";
+    } else {
+      // No change (zero)
+      changeColor = DASHBOARD_COLORS.warning;
+      changeSymbol = "";
+    }
+  }
   
   // Set the change indicator text with appropriate symbol
-  const changeSymbol = isPositive ? "▼" : (isNegative ? "▲" : "");
-  const changeText = `${changeSymbol} ${Math.abs(changeValue)} vs. yesterday`;
-  
-  // Set the color based on the change direction
-  let changeColor = DASHBOARD_COLORS.neutral; // Default color
-  if (isPositive) {
-    changeColor = DASHBOARD_COLORS.positive;
-  } else if (isNegative) {
-    changeColor = DASHBOARD_COLORS.negative;
-  }
+  const changeText = changeValue === 0 ? 
+                    "0 vs. yesterday" : 
+                    `${changeSymbol} ${Math.abs(changeValue)} vs. yesterday`;
   
   changeCell.setValue(changeText)
            .setFontColor(changeColor)
