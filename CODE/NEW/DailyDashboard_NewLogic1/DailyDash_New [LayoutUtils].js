@@ -90,7 +90,7 @@ function formatTile(range) {
 function setKpiRowHeights(sheet, startRow) {
   sheet.setRowHeight(startRow, 25);     // Title row
   sheet.setRowHeight(startRow + 1, 50); // Main value row - taller for large text
-  sheet.setRowHeight(startRow + 2, 25); // Change indicator/subtitle row
+  sheet.setRowHeight(startRow + 2, 25); // Change indicator row
 }
 
 /**
@@ -122,8 +122,15 @@ function formatSectionHeader(headerRange, title) {
  * @param {number} column - The column for the title
  * @param {string} title - The title text
  */
+/**
+ * Formats a KPI tile title
+ * @param {Sheet} sheet - The dashboard sheet
+ * @param {number} row - The row for the title
+ * @param {number} column - The starting column
+ * @param {string} title - The title text
+ */
 function formatKpiTitle(sheet, row, column, title) {
-  // Merge both cells for the title
+  // Merge the title across both columns
   sheet.getRange(row, column, 1, 2)
        .merge()
        .setValue(title)

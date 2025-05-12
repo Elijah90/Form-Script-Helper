@@ -211,20 +211,64 @@ function createSimpleKPITile(sheet, startRow, tileConfig) {
   // Set the title (merged across both columns in the first row of the tile)
   formatKpiTitle(sheet, startRow, tileConfig.column, tileConfig.title);
   
-  // Set the main value, potential secondary value, and change indicator line
-  // formatKpiValueWithChange handles row startRow + 1 (for value) and startRow + 2 (for change line)
-  formatKpiValueWithChange(
-    sheet, 
-    startRow + 1, // This is the row for the main KPI value
-    tileConfig.column, 
-    tileConfig.value, 
-    tileConfig.change, 
-    tileConfig.title === "% Negative Cases", // reverseColors logic
-    tileConfig.title,                     // Pass tile title for specific layout logic
-    tileConfig.subtitle                   // Pass subtitle for specific content (e.g., note or 5-star %)
-  );
+  // Check if this is the 5-Star Ratings tile
+  const isFiveStarRating = tileConfig.title === "5-Star Ratings";
   
-  // Apply yellow highlight bar for Average Rating only on the value row
+  // Set the main value in the first column of the second row
+  sheet.getRange(startRow + 1, tileConfig.column)
+       .setValue(tileConfig.value)
+       .setFontSize(36)
+       .setFontWeight("bold")
+       .setVerticalAlignment("middle");
+  
+  // Set the subtitle in the second column of the second row
+  if (tileConfig.title === "Average Rating") {
+    sheet.getRange(startRow + 1, tileConfig.column + 1)
+         .setValue(tileConfig.subtitle)
+         .setFontSize(12)
+         .setFontColor(DASHBOARD_COLORS.subText)
+         .setVerticalAlignment("bottom");
+  } else if (tileConfig.title === "5-Star Ratings") {
+    sheet.getRange(startRow + 1, tileConfig.column + 1)
+         .setValue(tileConfig.subtitle)
+         .setFontSize(12)
+         .setFontColor(DASHBOARD_COLORS.subText)
+         .setVerticalAlignment("bottom");
+  }
+  
+  // Merge the third row for the change indicator and set the value
+  const changeCell = sheet.getRange(startRow + 2, tileConfig.column, 1, 2);
+  changeCell.merge();
+  
+  // Format the change indicator with appropriate color
+  const changeValue = tileConfig.change;
+  const isNegative = tileConfig.title === "% Negative Cases" ? changeValue < 0 : changeValue > 0;
+  const isPositive = tileConfig.title === "% Negative Cases" ? changeValue > 0 : changeValue < 0;
+  
+  // Set the change indicator text with appropriate symbol
+  const changeSymbol = isPositive ? "▼" : (isNegative ? "▲" : "");
+  const changeText = `${changeSymbol} ${Math.abs(changeValue)} vs. yesterday`;
+  
+  // Set the color based on the change direction
+  let changeColor = DASHBOARD_COLORS.neutral; // Default color
+  if (isPositive) {
+    changeColor = DASHBOARD_COLORS.positive;
+  } else if (isNegative) {
+    changeColor = DASHBOARD_COLORS.negative;
+  }
+  
+  changeCell.setValue(changeText)
+           .setFontColor(changeColor)
+           .setFontSize(12)
+           .setVerticalAlignment("middle")
+           .setHorizontalAlignment("left");
+  
+  // Add note for % Negative Cases
+  if (tileConfig.title === "% Negative Cases") {
+    changeCell.setNote(tileConfig.subtitle);
+  }
+  
+  // Apply yellow highlight bar for Average Rating only
   if (tileConfig.title === "Average Rating") {
     createYellowHighlightBar(sheet, startRow + 1, tileConfig.column);
   }
@@ -255,21 +299,21 @@ function createEmptyKPITiles(sheet, startRow) {
       value: "0.0",
       change: 0,
       subtitle: "(out of 5.0)",
-      column: 4  // Column D (match main function)
+      column: 4  // Column D
     },
     {
       title: "5-Star Ratings",
       value: 0,
       change: 0,
       subtitle: "0% of total",
-      column: 7  // Column G (match main function)
+      column: 7  // Column G
     },
     {
       title: "% Negative Cases",
       value: "0%",
       change: 0,
       subtitle: "Action needed: 0 cases",
-      column: 10  // Column J (match main function)
+      column: 10  // Column J
     }
   ];
   
