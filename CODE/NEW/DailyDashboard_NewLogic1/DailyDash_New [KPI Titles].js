@@ -226,14 +226,18 @@ function createSimpleKPITile(sheet, startRow, tileConfig) {
     sheet.getRange(startRow + 1, tileConfig.column + 1)
          .setValue(tileConfig.subtitle)
          .setFontSize(12)
+         .setFontWeight("bold")
          .setFontColor(DASHBOARD_COLORS.subText)
-         .setVerticalAlignment("bottom");
+         .setVerticalAlignment("middle")
+         .setHorizontalAlignment("center");
   } else if (tileConfig.title === "5-Star Ratings") {
     sheet.getRange(startRow + 1, tileConfig.column + 1)
          .setValue(tileConfig.subtitle)
          .setFontSize(12)
+         .setFontWeight("bold")
          .setFontColor(DASHBOARD_COLORS.subText)
-         .setVerticalAlignment("bottom");
+         .setVerticalAlignment("middle")
+         .setHorizontalAlignment("center");
   }
   
   // Merge the third row for the change indicator and set the value
