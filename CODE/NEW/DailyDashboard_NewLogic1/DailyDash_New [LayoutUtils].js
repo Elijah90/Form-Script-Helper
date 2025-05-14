@@ -40,10 +40,15 @@ const DASHBOARD_LAYOUT = {
  * @param {Sheet} sheet - The Google Sheet to format
  */
 function setDashboardColumnWidths(sheet) {
-  // Use the original working widths that were proven to work
-  const firstCellWidth = DASHBOARD_LAYOUT.tileFirstCellWidth;   // 110px (original)
-  const secondCellWidth = DASHBOARD_LAYOUT.tileSecondCellWidth; // 120px (original)
-  const spacerWidth = DASHBOARD_LAYOUT.spacerWidth;            // 30px
+  // Updated column widths for the new KPI tile structure
+  // Total width per tile remains 230px (firstCellWidth + secondCellWidth)
+  const firstCellWidth = 90;   // Reduced from 110px
+  const secondCellWidth = 140; // Increased from 120px
+  const spacerWidth = DASHBOARD_LAYOUT.spacerWidth; // 30px
+  
+  // Update DASHBOARD_LAYOUT constants for reference elsewhere
+  DASHBOARD_LAYOUT.tileFirstCellWidth = firstCellWidth;
+  DASHBOARD_LAYOUT.tileSecondCellWidth = secondCellWidth;
   
   // Set column widths for KPI tiles with consistent spacing
   sheet.setColumnWidth(1, firstCellWidth);   // A - KPI 1 first cell
@@ -65,21 +70,39 @@ function setDashboardColumnWidths(sheet) {
 
 /**
  * Gets the column positions for KPI tiles based on flexible layout
- * @return {Array} Array of starting columns for each KPI tile
+ * @return {Object} Object containing arrays for left and right columns of each KPI tile
  */
 function getKpiTileColumns() {
-  return [1, 4, 7, 10]; // Starting columns for each tile
+  // Return an object with both left and right column positions for better structure
+  return {
+    left: [1, 4, 7, 10],  // Starting (left) columns for each tile
+    right: [2, 5, 8, 11]   // Right columns for each tile (for value alignment)
+  };
 }
 
 /**
  * Formats a range as a tile with white background and border
  * @param {Range} range - The range to format as a tile
+ * @param {Object} options - Optional formatting options
+ * @param {boolean} options.rightAlignSecondColumn - Whether to right-align the second column
  */
-function formatTile(range) {
+function formatTile(range, options = {}) {
+  // Apply base tile formatting
   range.setBackground(DASHBOARD_COLORS.tileBackground)
        .setBorder(true, true, true, true, false, false, 
                  DASHBOARD_COLORS.tileBorder, 
                  SpreadsheetApp.BorderStyle.SOLID);
+  
+  // If this is a multi-column range and right alignment is requested for second column
+  if (options.rightAlignSecondColumn && range.getNumColumns() > 1) {
+    const sheet = range.getSheet();
+    const startRow = range.getRow();
+    const startCol = range.getColumn();
+    const numRows = range.getNumRows();
+    
+    // Right-align the second column for better value display
+    sheet.getRange(startRow, startCol + 1, numRows, 1).setHorizontalAlignment('right');
+  }
 }
 
 /**
@@ -130,14 +153,30 @@ function formatSectionHeader(headerRange, title) {
  * @param {string} title - The title text
  */
 function formatKpiTitle(sheet, row, column, title) {
-  // Merge the title across both columns
-  sheet.getRange(row, column, 1, 2)
-       .merge()
-       .setValue(title)
-       .setFontSize(14)
-       .setFontColor(DASHBOARD_COLORS.subText)
-       .setVerticalAlignment("middle")
-       .setHorizontalAlignment("left");
+  // Get the column structure to determine the right column
+  const kpiColumns = getKpiTileColumns();
+  const tileIndex = kpiColumns.left.indexOf(column);
+  
+  // If this is a known KPI column, use the structure
+  if (tileIndex !== -1) {
+    // Merge the title across both columns
+    sheet.getRange(row, column, 1, 2)
+         .merge()
+         .setValue(title)
+         .setFontSize(14)
+         .setFontColor(DASHBOARD_COLORS.subText)
+         .setVerticalAlignment("middle")
+         .setHorizontalAlignment("left");
+  } else {
+    // Fallback for test cases or non-standard columns
+    sheet.getRange(row, column, 1, 2)
+         .merge()
+         .setValue(title)
+         .setFontSize(14)
+         .setFontColor(DASHBOARD_COLORS.subText)
+         .setVerticalAlignment("middle")
+         .setHorizontalAlignment("left");
+  }
 }
 
 /**
@@ -495,11 +534,24 @@ function testLayoutUtils() {
   const startRow = 4;
   setKpiRowHeights(sheet, startRow);
   
-  // Create a sample KPI tile
-  formatTile(sheet.getRange(startRow, 1, 5, 2));
+  // Create a sample KPI tile using the new 3-row structure
+  formatTile(sheet.getRange(startRow, 1, 3, 2), { rightAlignSecondColumn: true });
   formatKpiTitle(sheet, startRow, 1, "Sample KPI");
-  formatKpiValueWithChange(sheet, startRow + 1, 1, 42, 5);
-  formatKpiSubtitle(sheet, startRow + 3, 1, "Sample subtitle");
+  
+  // Use the right column (column 2) for the value with right alignment
+  sheet.getRange(startRow + 1, 2)
+       .setValue(42)
+       .setFontSize(36)
+       .setFontWeight("bold")
+       .setVerticalAlignment("middle")
+       .setHorizontalAlignment("right");
+  
+  // Use the right column for the change indicator
+  sheet.getRange(startRow + 2, 2)
+       .setValue("▲ 5%")
+       .setFontSize(12)
+       .setFontColor(DASHBOARD_COLORS.positive)
+       .setHorizontalAlignment("right");
   
   // Test section container
   createSectionContainer(sheet, startRow + 6, 5, 1, 11, "Sample Section");

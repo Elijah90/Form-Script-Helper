@@ -205,8 +205,16 @@ function createKPITiles(startRow) {
  * @param {Object} tileConfig - The tile configuration object
  */
 function createSimpleKPITile(sheet, startRow, tileConfig) {
+  // Get the column structure from the updated getKpiTileColumns function
+  const kpiColumns = getKpiTileColumns();
+  const tileIndex = kpiColumns.left.indexOf(tileConfig.column);
+  const rightColumn = kpiColumns.right[tileIndex];
+  
   // Format the tile container (spans 2 columns, 3 rows for Title, Value, Change)
-  formatTile(sheet.getRange(startRow, tileConfig.column, 3, 2));
+  // Use the new options parameter to right-align the second column
+  formatTile(sheet.getRange(startRow, tileConfig.column, 3, 2), {
+    rightAlignSecondColumn: true
+  });
   
   // Set the title (merged across both columns in the first row of the tile)
   formatKpiTitle(sheet, startRow, tileConfig.column, tileConfig.title);
@@ -215,34 +223,38 @@ function createSimpleKPITile(sheet, startRow, tileConfig) {
   const isFiveStarRating = tileConfig.title === "5-Star Ratings";
   
   // Set the main value in the first column of the second row
-  sheet.getRange(startRow + 1, tileConfig.column)
-       .setValue(tileConfig.value)
-       .setFontSize(36)
-       .setFontWeight("bold")
-       .setVerticalAlignment("middle");
-  
-  // Set the subtitle in the second column of the second row
-  if (tileConfig.title === "Average Rating") {
-    sheet.getRange(startRow + 1, tileConfig.column + 1)
+  // Use the wider second column for the main value when appropriate
+  if (tileConfig.title === "Average Rating" || tileConfig.title === "5-Star Ratings") {
+    // For tiles with subtitles, keep value in first column
+    sheet.getRange(startRow + 1, tileConfig.column)
+         .setValue(tileConfig.value)
+         .setFontSize(36)
+         .setFontWeight("bold")
+         .setVerticalAlignment("middle");
+    
+    // Set the subtitle in the second column of the second row
+    sheet.getRange(startRow + 1, rightColumn)
          .setValue(tileConfig.subtitle)
          .setFontSize(12)
          .setFontWeight("bold")
          .setFontColor(DASHBOARD_COLORS.subText)
          .setVerticalAlignment("middle")
-         .setHorizontalAlignment("center");
-  } else if (tileConfig.title === "5-Star Ratings") {
-    sheet.getRange(startRow + 1, tileConfig.column + 1)
-         .setValue(tileConfig.subtitle)
-         .setFontSize(12)
+         .setHorizontalAlignment("right");
+  } else {
+    // For tiles without subtitles, use the right column for better alignment
+    sheet.getRange(startRow + 1, rightColumn)
+         .setValue(tileConfig.value)
+         .setFontSize(36)
          .setFontWeight("bold")
-         .setFontColor(DASHBOARD_COLORS.subText)
          .setVerticalAlignment("middle")
-         .setHorizontalAlignment("center");
+         .setHorizontalAlignment("right");
   }
   
-  // Merge the third row for the change indicator and set the value
-  const changeCell = sheet.getRange(startRow + 2, tileConfig.column, 1, 2);
-  changeCell.merge();
+  // Format the third row for the change indicator
+  // With the new column structure, we'll use the right column for the change indicator
+  // to maintain better alignment with the value above it
+  const changeCell = sheet.getRange(startRow + 2, rightColumn);
+  // No need to merge cells anymore as we're using just the right column
   
   // Format the change indicator with appropriate color based on the KPI type
   const changeValue = tileConfig.change;
