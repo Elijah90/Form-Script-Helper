@@ -592,6 +592,65 @@ function formatKpiValueWithChange(sheet, row, column, value, change, reverseColo
 }
 
 /**
+ * Creates a container for a dashboard section using bands
+ * @param {Sheet} sheet - The Google Sheet
+ * @param {number} startRow - The starting row for the container
+ * @param {string[]} bandNames - Array of band/spacer names to span (e.g., ['band1'], ['band2','spacer2','band3'])
+ * @param {number} numRows - Number of rows for the container
+ * @param {Object} options - Formatting options: {background, border, title}
+ * @return {Object} Info about the container: {range, startRow, endRow, startCol, endCol, columns}
+ */
+function createContainer(sheet, startRow, bandNames, numRows, options = {}) {
+  // Get columns to span
+  const allBands = DASHBOARD_GRID.bands;
+  const columns = bandNames.flatMap(name => {
+    const band = allBands.find(b => b.name === name);
+    return band ? band.columns : [];
+  });
+  if (columns.length === 0) throw new Error('No columns found for bands: ' + bandNames.join(','));
+  const startCol = Math.min(...columns);
+  const endCol = Math.max(...columns);
+  // Merge the container area
+  const range = sheet.getRange(startRow, startCol, numRows, endCol - startCol + 1);
+  range.merge();
+  // Set background and border
+  if (options.background) range.setBackground(options.background);
+  if (options.border) range.setBorder(true, true, true, true, false, false);
+  // Set title if provided
+  if (options.title) {
+    range.setValue(options.title)
+         .setFontWeight('bold')
+         .setFontSize(14)
+         .setHorizontalAlignment('center')
+         .setVerticalAlignment('middle');
+  }
+  return {
+    range,
+    startRow,
+    endRow: startRow + numRows - 1,
+    startCol,
+    endCol,
+    columns
+  };
+}
+
+/**
+ * Test function for the container system: creates sample containers
+ */
+function testContainerSystem() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('DailyDash');
+  setupDashboardGrid(sheet);
+  // Clear a test area
+  sheet.getRange(12, 1, 12, 16).clearContent().setBackground(DASHBOARD_COLORS.background);
+  // Create a KPI tile container (band1)
+  createContainer(sheet, 12, ['band1'], 3, {background: '#E3F2FD', border: true, title: 'KPI Tile 1'});
+  // Create a table container spanning band2, spacer2, band3
+  createContainer(sheet, 16, ['band2','spacer2','band3'], 4, {background: '#FFFDE7', border: true, title: 'Table Section'});
+  // Create a full-width container (all bands and spacers)
+  createContainer(sheet, 21, ['band1','spacer1','band2','spacer2','band3','spacer3','band4'], 2, {background: '#E8F5E9', border: true, title: 'Full Width Section'});
+}
+
+/**
  * Test function to verify layout utilities
  */
 function testLayoutUtils() {
