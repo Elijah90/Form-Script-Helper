@@ -212,8 +212,9 @@ function createSimpleKPITile(sheet, startRow, tileConfig) {
   if (!bandName) throw new Error('Invalid tile column for band mapping');
 
   // Create the container for this KPI tile (3 rows, 1 band)
+  // Set background to white and border to medium-light grey for visual contrast
   const container = createContainer(sheet, startRow, [bandName], 3, {
-    background: undefined, // Use default or set per tile if desired
+    background: DASHBOARD_COLORS.tileBackground,
     border: true
   });
   const col = container.columns[0]; // Left column of the band

@@ -621,7 +621,7 @@ function createContainer(sheet, startRow, bandNames, numRows, options = {}) {
   const range = sheet.getRange(startRow, startCol, numRows, endCol - startCol + 1);
   // Set background and border
   if (options.background) range.setBackground(options.background);
-  if (options.border) range.setBorder(true, true, true, true, false, false);
+  if (options.border) range.setBorder(true, true, true, true, false, false, DASHBOARD_COLORS.tileBorder, SpreadsheetApp.BorderStyle.SOLID);
   // Set title if provided (centered, but do not merge)
   if (options.title) {
     range.setValue(options.title)
