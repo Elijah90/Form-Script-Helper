@@ -36,6 +36,77 @@ const DASHBOARD_LAYOUT = {
 };
 
 /**
+ * Centralized Dashboard Grid/Band System
+ * Defines all bands, columns, and widths for the dashboard layout
+ */
+const DASHBOARD_GRID = {
+  bands: [
+    { name: 'band1', columns: [1, 2], widths: [90, 90], color: '#E3F2FD' }, // A, B
+    { name: 'spacer1', columns: [3], widths: [30], color: '#B3E5FC' }, // C
+    { name: 'band2', columns: [4, 5], widths: [70, 80], color: '#FFF9C4' }, // D, E
+    { name: 'spacer2', columns: [6], widths: [30], color: '#B3E5FC' }, // F
+    { name: 'band3', columns: [7, 8], widths: [80, 100], color: '#E8F5E9' }, // G, H
+    { name: 'spacer3', columns: [9], widths: [30], color: '#B3E5FC' }, // I
+    { name: 'band4', columns: [10, 11], widths: [120, 110], color: '#FFEBEE' } // J, K
+  ],
+  controls: { columns: [15, 16], widths: [175, 175], color: '#F3E5F5' } // O, P
+};
+
+/**
+ * Sets up the dashboard grid: column widths and returns band mapping
+ * @param {Sheet} sheet - The Google Sheet to format
+ * @return {Object} Mapping of band names to column indices
+ */
+function setupDashboardGrid(sheet) {
+  const bandMap = {};
+  DASHBOARD_GRID.bands.forEach(band => {
+    band.columns.forEach((col, idx) => {
+      sheet.setColumnWidth(col, band.widths[idx]);
+    });
+    bandMap[band.name] = band.columns;
+  });
+  // Controls section
+  DASHBOARD_GRID.controls.columns.forEach((col, idx) => {
+    sheet.setColumnWidth(col, DASHBOARD_GRID.controls.widths[idx]);
+  });
+  bandMap['controls'] = DASHBOARD_GRID.controls.columns;
+  return bandMap;
+}
+
+/**
+ * Visualizes the grid by coloring each band differently for debugging or previewing real KPI tile colors
+ * @param {Sheet} sheet - The Google Sheet to format
+ * @param {number} startRow - The row to start coloring (default 1)
+ * @param {number} numRows - Number of rows to color (default 10)
+ * @param {boolean} useKpiColors - If true, use real KPI tile colors for bands (default false)
+ */
+function visualizeDashboardGrid(sheet, startRow = 1, numRows = 10, useKpiColors = false) {
+  // 1. Set initial dashboard background color for all columns in the grid
+  const allCols = [].concat(...DASHBOARD_GRID.bands.map(b => b.columns), DASHBOARD_GRID.controls.columns);
+  allCols.forEach(col => {
+    sheet.getRange(startRow, col, numRows, 1).setBackground(DASHBOARD_COLORS.background);
+  });
+
+  // 2. Overlay band and spacer colors
+  const kpiTileColors = ['#E3F2FD', '#FFFDE7', '#E8F5E9', '#FFEBEE']; // Blue, Yellow, Green, Red (soft)
+  let kpiColorIdx = 0;
+  DASHBOARD_GRID.bands.forEach(band => {
+    let color = band.color;
+    if (useKpiColors && band.name.startsWith('band')) {
+      color = kpiTileColors[kpiColorIdx % kpiTileColors.length];
+      kpiColorIdx++;
+    }
+    band.columns.forEach(col => {
+      sheet.getRange(startRow, col, numRows, 1).setBackground(color);
+    });
+  });
+  // Controls section
+  DASHBOARD_GRID.controls.columns.forEach(col => {
+    sheet.getRange(startRow, col, numRows, 1).setBackground(DASHBOARD_GRID.controls.color);
+  });
+}
+
+/**
  * Sets up the flexible dashboard column widths
  * @param {Sheet} sheet - The Google Sheet to format
  */
