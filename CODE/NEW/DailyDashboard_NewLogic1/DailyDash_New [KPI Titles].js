@@ -205,129 +205,28 @@ function createKPITiles(startRow) {
  * @param {Object} tileConfig - The tile configuration object
  */
 function createSimpleKPITile(sheet, startRow, tileConfig) {
-  // Get the column structure from the updated getKpiTileColumns function
-  const kpiColumns = getKpiTileColumns();
-  const tileIndex = kpiColumns.left.indexOf(tileConfig.column);
-  const rightColumn = kpiColumns.right[tileIndex];
-  
-  // Format the tile container (spans 2 columns, 3 rows for Title, Value, Change)
-  // Use the new options parameter to right-align the second column
-  formatTile(sheet.getRange(startRow, tileConfig.column, 3, 2), {
-    rightAlignSecondColumn: true
+  // Map tile index to band name
+  const bandNames = ['band1', 'band2', 'band3', 'band4'];
+  const tileIndex = [1, 4, 7, 10].indexOf(tileConfig.column);
+  const bandName = bandNames[tileIndex];
+  if (!bandName) throw new Error('Invalid tile column for band mapping');
+
+  // Create the container for this KPI tile (3 rows, 1 band)
+  const container = createContainer(sheet, startRow, [bandName], 3, {
+    background: undefined, // Use default or set per tile if desired
+    border: true
   });
-  
+  const col = container.columns[0]; // Left column of the band
+
   // Set the title (merged across both columns in the first row of the tile)
-  formatKpiTitle(sheet, startRow, tileConfig.column, tileConfig.title);
-  
-  // Check if this is the 5-Star Ratings tile
-  const isFiveStarRating = tileConfig.title === "5-Star Ratings";
-  
-  // Set the main value in the first column of the second row
-  // Use the wider second column for the main value when appropriate
-  if (tileConfig.title === "Average Rating" || tileConfig.title === "5-Star Ratings") {
-    // For tiles with subtitles, keep value in first column
-    sheet.getRange(startRow + 1, tileConfig.column)
-         .setValue(tileConfig.value)
-         .setFontSize(36)
-         .setFontWeight("bold")
-         .setVerticalAlignment("middle");
-    
-    // Set the subtitle in the second column of the second row
-    sheet.getRange(startRow + 1, rightColumn)
-         .setValue(tileConfig.subtitle)
-         .setFontSize(12)
-         .setFontWeight("bold")
-         .setFontColor(DASHBOARD_COLORS.subText)
-         .setVerticalAlignment("middle")
-         .setHorizontalAlignment("right");
-  } else {
-    // For tiles without subtitles, use the right column for better alignment
-    sheet.getRange(startRow + 1, rightColumn)
-         .setValue(tileConfig.value)
-         .setFontSize(36)
-         .setFontWeight("bold")
-         .setVerticalAlignment("middle")
-         .setHorizontalAlignment("right");
-  }
-  
-  // Format the third row for the change indicator
-  // With the new column structure, we'll use the right column for the change indicator
-  // to maintain better alignment with the value above it
-  const changeCell = sheet.getRange(startRow + 2, rightColumn);
-  // No need to merge cells anymore as we're using just the right column
-  
-  // Format the change indicator with appropriate color based on the KPI type
-  const changeValue = tileConfig.change;
-  let changeColor = DASHBOARD_COLORS.neutral; // Default color
-  let changeSymbol = "";
-  
-  // Apply different color logic based on the KPI type
-  if (tileConfig.title === "Submissions Today") {
-    // Submissions Today: Red if down >20%, Orange if down <20% or no change
-    if (changeValue < 0) {
-      // Calculate percentage change
-      const percentChange = Math.abs(changeValue) / (tileConfig.value - changeValue) * 100;
-      if (percentChange > 20) {
-        changeColor = DASHBOARD_COLORS.negative;
-      } else {
-        changeColor = DASHBOARD_COLORS.warning;
-      }
-      changeSymbol = "▼";
-    } else if (changeValue > 0) {
-      changeColor = DASHBOARD_COLORS.positive;
-      changeSymbol = "▲";
-    } else {
-      // No change (zero)
-      changeColor = DASHBOARD_COLORS.warning;
-      changeSymbol = "";
-    }
-  } else if (tileConfig.title === "Average Rating" || tileConfig.title === "5-Star Ratings") {
-    // Average Rating & 5-Star Ratings: Red if down, Orange if no change, Green if up
-    if (changeValue < 0) {
-      changeColor = DASHBOARD_COLORS.negative;
-      changeSymbol = "▼";
-    } else if (changeValue > 0) {
-      changeColor = DASHBOARD_COLORS.positive;
-      changeSymbol = "▲";
-    } else {
-      // No change (zero)
-      changeColor = DASHBOARD_COLORS.warning;
-      changeSymbol = "";
-    }
-  } else if (tileConfig.title === "% Negative Cases") {
-    // % Negative Cases: Green if down, Orange if no change, Red if up
-    if (changeValue < 0) {
-      changeColor = DASHBOARD_COLORS.positive;
-      changeSymbol = "▼";
-    } else if (changeValue > 0) {
-      changeColor = DASHBOARD_COLORS.negative;
-      changeSymbol = "▲";
-    } else {
-      // No change (zero)
-      changeColor = DASHBOARD_COLORS.warning;
-      changeSymbol = "";
-    }
-  }
-  
-  // Set the change indicator text with appropriate symbol
-  const changeText = changeValue === 0 ? 
-                    "0 vs. yesterday" : 
-                    `${changeSymbol} ${Math.abs(changeValue)} vs. yesterday`;
-  
-  changeCell.setValue(changeText)
-           .setFontColor(changeColor)
-           .setFontSize(12)
-           .setVerticalAlignment("middle")
-           .setHorizontalAlignment("left");
-  
-  // Add note for % Negative Cases
-  if (tileConfig.title === "% Negative Cases") {
-    changeCell.setNote(tileConfig.subtitle);
-  }
-  
+  formatKpiTitle(sheet, startRow, col, tileConfig.title);
+
+  // Set the main value and subtitle using formatKpiValueWithChange (handles both cells)
+  formatKpiValueWithChange(sheet, startRow + 1, col, tileConfig.value, tileConfig.change, false, tileConfig.title, tileConfig.subtitle);
+
   // Apply yellow highlight bar for Average Rating only
   if (tileConfig.title === "Average Rating") {
-    createYellowHighlightBar(sheet, startRow + 1, tileConfig.column);
+    createYellowHighlightBar(sheet, startRow + 1, col);
   }
 }
 
@@ -398,4 +297,20 @@ function testKPITilesSection() {
   
   // Log the result
   Logger.log("KPI tiles section created. Next row: " + nextRow);
+}
+
+function testKPITilesWithContainers() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('DailyDash');
+  setupDashboardGrid(sheet);
+  setKpiRowHeights(sheet, 4);
+  // Example: create all four KPI tiles using containers
+  const kpiTiles = [
+    { title: "Submissions Today", value: 110, change: 40, subtitle: "vs. yesterday", column: 1 },
+    { title: "Average Rating", value: "3.7", change: 0.6, subtitle: "(out of 5.0)", column: 4 },
+    { title: "5-Star Ratings", value: 21, change: 15, subtitle: "19% of total", column: 7 },
+    { title: "% Negative Cases", value: "8%", change: -18, subtitle: "Action needed: 3 cases", column: 10 }
+  ];
+  for (let i = 0; i < kpiTiles.length; i++) {
+    createSimpleKPITile(sheet, 4, kpiTiles[i]);
+  }
 }
