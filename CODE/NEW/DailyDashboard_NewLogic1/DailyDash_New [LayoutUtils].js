@@ -542,7 +542,12 @@ function formatKpiValueWithChange(sheet, row, column, value, change, reverseColo
   const changeIndicatorRow = row + 1;
   const changeCell = sheet.getRange(changeIndicatorRow, column, 1, 2);
   // Clear, unmerge, then merge to ensure clean state
-  changeCell.clearContent().clearDataValidations().clearNote().unmerge(); 
+  changeCell.clearContent().clearDataValidations().clearNote();
+  try {
+    changeCell.unmerge();
+  } catch (e) {
+    // Ignore if not merged or not possible
+  }
   changeCell.merge();
 
   // Create the change indicator text
@@ -593,6 +598,8 @@ function formatKpiValueWithChange(sheet, row, column, value, change, reverseColo
 
 /**
  * Creates a container for a dashboard section using bands
+ * NOTE: Does NOT merge the whole container range, only sets background and border.
+ *       Merging of subranges (title, value, change indicator) should be handled by content functions.
  * @param {Sheet} sheet - The Google Sheet
  * @param {number} startRow - The starting row for the container
  * @param {string[]} bandNames - Array of band/spacer names to span (e.g., ['band1'], ['band2','spacer2','band3'])
@@ -610,13 +617,12 @@ function createContainer(sheet, startRow, bandNames, numRows, options = {}) {
   if (columns.length === 0) throw new Error('No columns found for bands: ' + bandNames.join(','));
   const startCol = Math.min(...columns);
   const endCol = Math.max(...columns);
-  // Merge the container area
+  // Do NOT merge the container area (let content functions handle merging)
   const range = sheet.getRange(startRow, startCol, numRows, endCol - startCol + 1);
-  range.merge();
   // Set background and border
   if (options.background) range.setBackground(options.background);
   if (options.border) range.setBorder(true, true, true, true, false, false);
-  // Set title if provided
+  // Set title if provided (centered, but do not merge)
   if (options.title) {
     range.setValue(options.title)
          .setFontWeight('bold')
