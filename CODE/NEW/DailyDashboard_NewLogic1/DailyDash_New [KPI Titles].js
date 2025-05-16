@@ -215,8 +215,23 @@ function createSimpleKPITile(sheet, startRow, tileConfig) {
   // Get all columns in the band
   const band = DASHBOARD_GRID.bands.find(b => b.name === bandName);
   const bandCols = band.columns;
-  const bandWidth = bandCols.length;
+  const bandWidths = band.widths;
   const leftCol = bandCols[0];
+  const bandWidthPx = bandWidths.reduce((a, b) => a + b, 0);
+  const tileMaxWidth = 300; // px
+  const firstColPx = Math.round(tileMaxWidth * 0.38);
+  const secondColPx = tileMaxWidth - firstColPx;
+
+  // Find how many columns to merge for each visual column
+  let acc = 0, firstColCount = 0;
+  for (let i = 0; i < bandWidths.length; i++) {
+    acc += bandWidths[i];
+    if (acc < firstColPx) firstColCount++;
+    else break;
+  }
+  if (firstColCount === 0) firstColCount = 1;
+  let secondColCount = bandCols.length - firstColCount;
+  if (secondColCount === 0) secondColCount = 1;
 
   // Create the container for this KPI tile (3 rows, full band width)
   const container = createContainer(sheet, startRow, [bandName], 3, {
@@ -225,43 +240,50 @@ function createSimpleKPITile(sheet, startRow, tileConfig) {
   });
 
   // Set the title (merged across all columns in the band)
-  sheet.getRange(startRow, leftCol, 1, bandWidth).merge().setValue(tileConfig.title)
+  sheet.getRange(startRow, leftCol, 1, bandCols.length).merge().setValue(tileConfig.title)
     .setFontSize(14)
     .setFontColor(DASHBOARD_COLORS.subText)
     .setVerticalAlignment("middle")
     .setHorizontalAlignment("left");
 
-  // Set the main value and subtitle (value row)
-  // Main value in the first column, subtitle in the rest (merged)
-  sheet.getRange(startRow + 1, leftCol, 1, 1)
+  // Set the main value and subtitle using visual columns
+  // Main value in the first visual column
+  sheet.getRange(startRow + 1, leftCol, 1, firstColCount).merge()
     .setValue(tileConfig.value)
     .setFontSize(36)
     .setFontWeight("bold")
     .setFontColor(DASHBOARD_COLORS.headerText)
     .setVerticalAlignment("middle")
     .setHorizontalAlignment("left");
+  // Subtitle in the second visual column (if needed)
   if (tileConfig.title === "Average Rating" || tileConfig.title === "5-Star Ratings") {
-    sheet.getRange(startRow + 1, leftCol + 1, 1, bandWidth - 1).merge()
+    sheet.getRange(startRow + 1, leftCol + firstColCount, 1, secondColCount).merge()
       .setValue(tileConfig.subtitle)
       .setFontSize(12)
       .setFontColor(DASHBOARD_COLORS.subText)
       .setVerticalAlignment("middle")
       .setHorizontalAlignment("left");
   } else {
-    sheet.getRange(startRow + 1, leftCol + 1, 1, bandWidth - 1).merge().setValue("");
+    sheet.getRange(startRow + 1, leftCol + firstColCount, 1, secondColCount).merge().setValue("");
   }
 
   // Set the change indicator (merged across all columns in the band)
-  sheet.getRange(startRow + 2, leftCol, 1, bandWidth).merge()
-    .setValue(formatChangeIndicatorText(tileConfig.change, tileConfig.subtitle, tileConfig.title))
+  const changeCell = sheet.getRange(startRow + 2, leftCol, 1, bandCols.length).merge();
+  changeCell.setValue(formatChangeIndicatorText(tileConfig.change, tileConfig.subtitle, tileConfig.title))
     .setFontSize(12)
     .setFontColor(getChangeColor(tileConfig.change, tileConfig.title))
     .setVerticalAlignment("middle")
     .setHorizontalAlignment("left");
+  // For '% Negative Cases', set the subtitle as a cell note only
+  if (tileConfig.title === "% Negative Cases") {
+    changeCell.setNote(tileConfig.subtitle);
+  } else {
+    changeCell.setNote("");
+  }
 
   // Apply yellow highlight bar for Average Rating only
   if (tileConfig.title === "Average Rating") {
-    sheet.getRange(startRow + 1, leftCol, 1, bandWidth).setBackground(DASHBOARD_COLORS.warning);
+    sheet.getRange(startRow + 1, leftCol, 1, bandCols.length).setBackground(DASHBOARD_COLORS.warning);
   }
 }
 
