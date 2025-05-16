@@ -141,11 +141,10 @@ function createKPITiles(startRow) {
       Math.round((todayFiveStars / todaySubmissions) * 100) : 0;
     
     // Clear the KPI area and set up layout for 3-row KPIs
-    clearSectionArea(sheet, startRow, 3, 15); 
-    setDashboardColumnWidths(sheet);
+    clearSectionArea(sheet, startRow, 3, 22); // Clear enough columns for new grid
     setKpiRowHeights(sheet, startRow); // This now sets for 3 rows
     
-    // Define KPI tiles configuration using flexible layout
+    // Define KPI tiles configuration using new grid columns
     const kpiTiles = [
       {
         title: "Submissions Today",
@@ -159,21 +158,21 @@ function createKPITiles(startRow) {
         value: todayAvgRating.toFixed(1),
         change: avgRatingChange,
         subtitle: "(out of 5.0)",
-        column: 4  // Column D
+        column: 6  // Column F
       },
       {
         title: "5-Star Ratings",
         value: todayFiveStars,
         change: fiveStarChange,
         subtitle: fiveStarPercentage + "% of total",
-        column: 7  // Column G
+        column: 11  // Column K
       },
       {
         title: "% Negative Cases",
         value: todayNegativePercentage + "%",
         change: negativePercentageChange,
         subtitle: "Action needed: " + todayNegatives + " cases",
-        column: 10  // Column J
+        column: 16  // Column P
       }
     ];
     
@@ -309,8 +308,7 @@ function getChangeColor(change, title) {
 function createEmptyKPITiles(sheet, startRow) {
   enforceDashboardColumnWidths(sheet);
   // Clear the KPI area and set up layout for 3-row KPIs
-  clearSectionArea(sheet, startRow, 3, 15); 
-  setDashboardColumnWidths(sheet);
+  clearSectionArea(sheet, startRow, 3, 22); // Clear enough columns for new grid
   setKpiRowHeights(sheet, startRow); // This now sets for 3 rows
   
   // Define KPI tiles with empty values using the same columns as the main function
@@ -327,21 +325,21 @@ function createEmptyKPITiles(sheet, startRow) {
       value: "0.0",
       change: 0,
       subtitle: "(out of 5.0)",
-      column: 4  // Column D
+      column: 6  // Column F
     },
     {
       title: "5-Star Ratings",
       value: 0,
       change: 0,
       subtitle: "0% of total",
-      column: 7  // Column G
+      column: 11  // Column K
     },
     {
       title: "% Negative Cases",
       value: "0%",
       change: 0,
       subtitle: "Action needed: 0 cases",
-      column: 10  // Column J
+      column: 16  // Column P
     }
   ];
   
