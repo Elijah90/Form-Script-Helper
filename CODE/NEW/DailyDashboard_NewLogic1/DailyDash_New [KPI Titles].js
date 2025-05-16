@@ -212,23 +212,79 @@ function createSimpleKPITile(sheet, startRow, tileConfig) {
   const bandName = bandNames[tileIndex];
   if (!bandName) throw new Error('Invalid tile column for band mapping');
 
-  // Create the container for this KPI tile (3 rows, 1 band)
-  // Set background to white and border to medium-light grey for visual contrast
+  // Get all columns in the band
+  const band = DASHBOARD_GRID.bands.find(b => b.name === bandName);
+  const bandCols = band.columns;
+  const bandWidth = bandCols.length;
+  const leftCol = bandCols[0];
+
+  // Create the container for this KPI tile (3 rows, full band width)
   const container = createContainer(sheet, startRow, [bandName], 3, {
     background: DASHBOARD_COLORS.tileBackground,
     border: true
   });
-  const col = container.columns[0]; // Left column of the band
 
-  // Set the title (merged across both columns in the first row of the tile)
-  formatKpiTitle(sheet, startRow, col, tileConfig.title);
+  // Set the title (merged across all columns in the band)
+  sheet.getRange(startRow, leftCol, 1, bandWidth).merge().setValue(tileConfig.title)
+    .setFontSize(14)
+    .setFontColor(DASHBOARD_COLORS.subText)
+    .setVerticalAlignment("middle")
+    .setHorizontalAlignment("left");
 
-  // Set the main value and subtitle using formatKpiValueWithChange (handles both cells)
-  formatKpiValueWithChange(sheet, startRow + 1, col, tileConfig.value, tileConfig.change, false, tileConfig.title, tileConfig.subtitle);
+  // Set the main value and subtitle (value row)
+  // Main value in the first column, subtitle in the rest (merged)
+  sheet.getRange(startRow + 1, leftCol, 1, 1)
+    .setValue(tileConfig.value)
+    .setFontSize(36)
+    .setFontWeight("bold")
+    .setFontColor(DASHBOARD_COLORS.headerText)
+    .setVerticalAlignment("middle")
+    .setHorizontalAlignment("left");
+  if (tileConfig.title === "Average Rating" || tileConfig.title === "5-Star Ratings") {
+    sheet.getRange(startRow + 1, leftCol + 1, 1, bandWidth - 1).merge()
+      .setValue(tileConfig.subtitle)
+      .setFontSize(12)
+      .setFontColor(DASHBOARD_COLORS.subText)
+      .setVerticalAlignment("middle")
+      .setHorizontalAlignment("left");
+  } else {
+    sheet.getRange(startRow + 1, leftCol + 1, 1, bandWidth - 1).merge().setValue("");
+  }
+
+  // Set the change indicator (merged across all columns in the band)
+  sheet.getRange(startRow + 2, leftCol, 1, bandWidth).merge()
+    .setValue(formatChangeIndicatorText(tileConfig.change, tileConfig.subtitle, tileConfig.title))
+    .setFontSize(12)
+    .setFontColor(getChangeColor(tileConfig.change, tileConfig.title))
+    .setVerticalAlignment("middle")
+    .setHorizontalAlignment("left");
 
   // Apply yellow highlight bar for Average Rating only
   if (tileConfig.title === "Average Rating") {
-    createYellowHighlightBar(sheet, startRow + 1, col);
+    sheet.getRange(startRow + 1, leftCol, 1, bandWidth).setBackground(DASHBOARD_COLORS.warning);
+  }
+}
+
+// Helper to format the change indicator text
+function formatChangeIndicatorText(change, subtitle, title) {
+  let changeText = "";
+  if (change > 0) changeText = `▲ ${Math.abs(change)}`;
+  else if (change < 0) changeText = `▼ ${Math.abs(change)}`;
+  else changeText = "— 0";
+  if (title === "% Negative Cases") return `${changeText} vs. yesterday\n${subtitle}`;
+  return `${changeText} vs. yesterday`;
+}
+
+// Helper to get the color for the change indicator
+function getChangeColor(change, title) {
+  if (title === "% Negative Cases") {
+    if (change < 0) return DASHBOARD_COLORS.positive;
+    if (change > 0) return DASHBOARD_COLORS.negative;
+    return DASHBOARD_COLORS.warning;
+  } else {
+    if (change < 0) return DASHBOARD_COLORS.negative;
+    if (change > 0) return DASHBOARD_COLORS.positive;
+    return DASHBOARD_COLORS.warning;
   }
 }
 
