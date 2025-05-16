@@ -79,57 +79,35 @@ function createRepPerformanceTable(startRow) {
  * @param {number} row - Row for headers
  */
 function createPerformanceTableHeaders(sheet, row) {
-  // Align header structure with KPI tiles above
-  // Using the same column structure as KPI tiles:
-  // A-B: Rep Name (merged to match KPI tile width)
-  // C: Spacer (matches KPI tile spacer)
-  // D-E: Performance Metrics (merged to match KPI tile width)
-  // F: Spacer (matches KPI tile spacer)
-  // G-H: Milestone Progress (merged to match KPI tile width)
-  // I: Spacer (matches KPI tile spacer)
-  // J-K: Reward & Negatives (merged to match KPI tile width)
-  
+  // Use the DASHBOARD_GRID config for band and spacer structure
+  // Merge headers across bands and spacers as needed for text length and alignment
+  const bands = DASHBOARD_GRID.bands;
+  // Example: merge Sales Rep across band1 and spacer1, Performance Metrics across band2 and spacer2, etc.
+  // Adjust as needed for your actual header text and layout
+  // This example assumes 4 main headers, each spanning a band and its following spacer (except the last)
+
   // Set header row height
   sheet.setRowHeight(row, 30);
-  
-  // Format the entire header row background
-  sheet.getRange(row, 1, 1, 11).setBackground(DASHBOARD_COLORS.background);
-  
-  // Create headers with merging that matches KPI tile structure
-  // First KPI tile position (columns A-B)
-  sheet.getRange(row, 1, 1, 2).merge().setValue("Sales Rep")
-       .setBackground("#f1f3f4");
-       
-  // Spacer column C - keep empty with dashboard background
-  sheet.getRange(row, 3).setValue("");
-  
-  // Second KPI tile position (columns D-E)
-  sheet.getRange(row, 4, 1, 2).merge().setValue("Performance Metrics")
-       .setBackground("#f1f3f4");
-       
-  // Spacer column F - keep empty with dashboard background
-  sheet.getRange(row, 6).setValue("");
-  
-  // Third KPI tile position (columns G-H)
-  sheet.getRange(row, 7, 1, 2).merge().setValue("Milestone Progress")
-       .setBackground("#f1f3f4");
-       
-  // Spacer column I - keep empty with dashboard background
-  sheet.getRange(row, 9).setValue("");
-  
-  // Fourth KPI tile position (columns J-K)
-  sheet.getRange(row, 10, 1, 2).merge().setValue("Rewards & Negatives")
-       .setBackground("#f1f3f4");
-  
+
+  // Clear previous header area (A-L)
+  sheet.getRange(row, 1, 1, 12).clearContent().setBackground(DASHBOARD_COLORS.background);
+
+  // Sales Rep: A-C (band1 + spacer1)
+  sheet.getRange(row, 1, 1, 3).merge().setValue("Sales Rep").setBackground("#f1f3f4");
+  // Performance Metrics: D-F (band2 + spacer2)
+  sheet.getRange(row, 4, 1, 3).merge().setValue("Performance Metrics").setBackground("#f1f3f4");
+  // Milestone Progress: G-I (band3 + spacer3)
+  sheet.getRange(row, 7, 1, 3).merge().setValue("Milestone Progress").setBackground("#f1f3f4");
+  // Rewards & Negatives: J-L (band4)
+  sheet.getRange(row, 10, 1, 3).merge().setValue("Rewards & Negatives").setBackground("#f1f3f4");
+
   // Apply consistent formatting
-  sheet.getRange(row, 1, 1, 11)
+  sheet.getRange(row, 1, 1, 12)
        .setFontSize(12)
-       .setFontWeight("bold") 
+       .setFontWeight("bold")
        .setFontColor(DASHBOARD_COLORS.headerText)
-       .setVerticalAlignment("middle");
-  
-  // Center align all headers
-  sheet.getRange(row, 1, 1, 11).setHorizontalAlignment("center");
+       .setVerticalAlignment("middle")
+       .setHorizontalAlignment("center");
 }
 
 /**
@@ -141,68 +119,32 @@ function createPerformanceTableHeaders(sheet, row) {
 function createPerformanceDataRows(sheet, startRow, repData) {
   repData.forEach((rep, index) => {
     const currentRow = startRow + index;
-    
     // Determine row background color based on performance
     let backgroundColor;
     switch (rep.performanceLevel) {
-      case 'good':
-        backgroundColor = "#E8F5E9"; // Light green
-        break;
-      case 'medium':
-        backgroundColor = "#FFF8E1"; // Light yellow
-        break;
-      case 'poor':
-        backgroundColor = "#FFEBEE"; // Light red
-        break;
-      default:
-        backgroundColor = "white";
+      case 'good': backgroundColor = "#E8F5E9"; break;
+      case 'medium': backgroundColor = "#FFF8E1"; break;
+      case 'poor': backgroundColor = "#FFEBEE"; break;
+      default: backgroundColor = "white";
     }
-    
     // Format the entire row
-    sheet.getRange(currentRow, 1, 1, 11)
+    sheet.getRange(currentRow, 1, 1, 12)
          .setBackground(backgroundColor)
          .setBorder(true, true, true, true, false, false, "#e0e0e0", SpreadsheetApp.BorderStyle.SOLID);
-    
-    // Set row height
     sheet.setRowHeight(currentRow, 40);
-    
-    // Set data values with matching header layout
-    // First KPI tile position (columns A-B) - Rep Name
-    sheet.getRange(currentRow, 1, 1, 2).merge().setValue(rep.repName)
-         .setHorizontalAlignment("left");
-         
-    // Spacer column C - keep empty
-    sheet.getRange(currentRow, 3).setValue("");
-    
-    // Second KPI tile position (columns D-E) - Performance Metrics
-    // Create a subheader with metrics in column D
+    // Sales Rep: A-C
+    sheet.getRange(currentRow, 1, 1, 3).merge().setValue(rep.repName).setHorizontalAlignment("left");
+    // Performance Metrics: D-F
     const metricsText = `Responses: ${rep.totalResponses}\nAvg Rating: ${rep.avgRating.toFixed(1)}\n5★: ${rep.fiveStarsToday} / ${rep.fiveStarsTotal}`;
-    sheet.getRange(currentRow, 4, 1, 2).merge().setValue(metricsText)
-         .setHorizontalAlignment("center")
-         .setVerticalAlignment("middle");
-         
-    // Spacer column F - keep empty
-    sheet.getRange(currentRow, 6).setValue("");
-    
-    // Third KPI tile position (columns G-H) - Milestone Progress
+    sheet.getRange(currentRow, 4, 1, 3).merge().setValue(metricsText).setHorizontalAlignment("center").setVerticalAlignment("middle");
+    // Milestone Progress: G-I
     createMilestoneProgressBar(sheet, currentRow, 7, rep.milestoneProgress, rep.performanceLevel);
-    
-    // Spacer column I - keep empty
-    sheet.getRange(currentRow, 9).setValue("");
-    
-    // Fourth KPI tile position (columns J-K) - Rewards & Negatives
+    // Rewards & Negatives: J-L
     const rewardText = rep.rewardDue > 0 ? `£${rep.rewardDue} (earned)` : "-";
     const combinedText = `Rewards: ${rewardText}\nNegatives: ${rep.negatives}`;
-    sheet.getRange(currentRow, 10, 1, 2).merge().setValue(combinedText)
-         .setHorizontalAlignment("center");
-    
+    sheet.getRange(currentRow, 10, 1, 3).merge().setValue(combinedText).setHorizontalAlignment("center");
     // Apply consistent formatting
-    sheet.getRange(currentRow, 1, 1, 11)
-         .setFontSize(12)
-         .setVerticalAlignment("middle");
-    
-    // No need for individual column alignment as we're using merged cells
-    // that are already aligned in their respective setValue calls
+    sheet.getRange(currentRow, 1, 1, 12).setFontSize(12).setVerticalAlignment("middle");
   });
 }
 
