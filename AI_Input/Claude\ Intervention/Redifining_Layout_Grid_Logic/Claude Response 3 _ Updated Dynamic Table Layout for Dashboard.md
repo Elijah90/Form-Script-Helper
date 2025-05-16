@@ -60,11 +60,11 @@ Instead of trying to force all headers into the exact same column positions as K
 │                 │                                   │                           │                       │
 │   Rep Name      │   Performance Metrics             │   Milestone Data          │   Rewards & Feedback  │
 │                 │                                   │                           │                       │
-├─────────────────┼───────────┬──────────┬───────────┼───────────┬───────────────┼───────────┬───────────┤
-│                 │           │          │           │           │               │           │           │
-│   Rep Name      │ Responses │ Rating   │ 5★ Today  │ 5★ Total  │ Milestone     │ Reward    │ Negatives │
-│                 │           │          │           │           │ Progress      │ Due       │           │
-└─────────────────┴───────────┴──────────┴───────────┴───────────┴───────────────┴───────────┴───────────┘
+├─────────────────┼───────────┬──────────┬────────────┼───────────┬───────────────┼───────────┬───────────┤
+│                 │           │          │            │           │               │           │           │
+│   Rep Name      │ Responses │ Rating   │ 5★ Today   │ 5★ Total  │ Milestone     │ Reward    │ Negatives │
+│                 │           │          │            │           │ Progress      │ Due       │           │
+└─────────────────┴───────────┴──────────┴────────────┴───────────┴───────────────┴───────────┴───────────┘
 ```
 
 ## Implementation in the Grid System
