@@ -41,15 +41,15 @@ const DASHBOARD_LAYOUT = {
  */
 const DASHBOARD_GRID = {
   bands: [
-    { name: 'band1', columns: [1, 2], widths: [90, 90], color: '#E3F2FD' }, // A, B
-    { name: 'spacer1', columns: [3], widths: [30], color: '#B3E5FC' }, // C
-    { name: 'band2', columns: [4, 5], widths: [70, 80], color: '#FFF9C4' }, // D, E
-    { name: 'spacer2', columns: [6], widths: [30], color: '#B3E5FC' }, // F
-    { name: 'band3', columns: [7, 8], widths: [80, 100], color: '#E8F5E9' }, // G, H
-    { name: 'spacer3', columns: [9], widths: [30], color: '#B3E5FC' }, // I
-    { name: 'band4', columns: [10, 11], widths: [120, 110], color: '#FFEBEE' } // J, K
+    { name: 'band1', columns: [1, 2, 3, 4], widths: [70, 70, 45, 45], color: '#E3F2FD' }, // A, B, C, D
+    { name: 'spacer1', columns: [5], widths: [30], color: '#B3E5FC' }, // E
+    { name: 'band2', columns: [6, 7, 8, 9], widths: [60, 60, 55, 55], color: '#FFF9C4' }, // F, G, H, I
+    { name: 'spacer2', columns: [10], widths: [30], color: '#B3E5FC' }, // J
+    { name: 'band3', columns: [11, 12, 13, 14], widths: [60, 60, 55, 55], color: '#E8F5E9' }, // K, L, M, N
+    { name: 'spacer3', columns: [15], widths: [30], color: '#B3E5FC' }, // O
+    { name: 'band4', columns: [16, 17, 18, 19], widths: [70, 70, 45, 45], color: '#FFEBEE' } // P, Q, R, S
   ],
-  controls: { columns: [15, 16], widths: [175, 175], color: '#F3E5F5' } // O, P
+  controls: { columns: [21, 22], widths: [175, 175], color: '#F3E5F5' } // U, V
 };
 
 /**
