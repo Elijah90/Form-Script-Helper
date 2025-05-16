@@ -206,72 +206,60 @@ function createKPITiles(startRow) {
  * @param {Object} tileConfig - The tile configuration object
  */
 function createSimpleKPITile(sheet, startRow, tileConfig) {
-  // Map tile index to band name
-  const bandNames = ['band1', 'band2', 'band3', 'band4'];
-  const tileIndex = [1, 4, 7, 10].indexOf(tileConfig.column);
-  const bandName = bandNames[tileIndex];
-  if (!bandName) throw new Error('Invalid tile column for band mapping');
+  // Map tile index to band names for first and second visual columns
+  const bandMap = [
+    { first: 'tile1_first', second: 'tile1_second' },
+    { first: 'tile2_first', second: 'tile2_second' },
+    { first: 'tile3_first', second: 'tile3_second' },
+    { first: 'tile4_first', second: 'tile4_second' }
+  ];
+  const tileIndex = [1, 6, 11, 16].indexOf(tileConfig.column);
+  const bands = bandMap[tileIndex];
+  if (!bands) throw new Error('Invalid tile column for band mapping');
 
-  // Get all columns in the band
-  const band = DASHBOARD_GRID.bands.find(b => b.name === bandName);
-  const bandCols = band.columns;
-  const bandWidths = band.widths;
-  const leftCol = bandCols[0];
-  const bandWidthPx = bandWidths.reduce((a, b) => a + b, 0);
-  const tileMaxWidth = 300; // px
-  const firstColPx = Math.round(tileMaxWidth * 0.38);
-  const secondColPx = tileMaxWidth - firstColPx;
+  // Get columns for first and second visual columns
+  const firstCols = DASHBOARD_GRID.bands.find(b => b.name === bands.first).columns;
+  const secondCols = DASHBOARD_GRID.bands.find(b => b.name === bands.second).columns;
+  const allCols = firstCols.concat(secondCols);
+  const leftCol = allCols[0];
+  const totalCols = allCols.length;
 
-  // Find how many columns to merge for each visual column, as close as possible to the target px
-  let acc = 0, firstColCount = 0;
-  for (let i = 0; i < bandWidths.length; i++) {
-    if (acc + bandWidths[i] <= firstColPx || firstColCount === 0) {
-      acc += bandWidths[i];
-      firstColCount++;
-    } else {
-      break;
-    }
-  }
-  if (firstColCount >= bandCols.length) firstColCount = bandCols.length - 1;
-  let secondColCount = bandCols.length - firstColCount;
-  if (secondColCount === 0) secondColCount = 1;
-
-  // Create the container for this KPI tile (3 rows, full band width)
-  const container = createContainer(sheet, startRow, [bandName], 3, {
+  // Create the container for this KPI tile (3 rows, full tile width)
+  const container = createContainer(sheet, startRow, [bands.first, bands.second], 3, {
     background: DASHBOARD_COLORS.tileBackground,
     border: true
   });
 
-  // Set the title (merged across all columns in the band)
-  sheet.getRange(startRow, leftCol, 1, bandCols.length).merge().setValue(tileConfig.title)
+  // Set the title (merged across all columns in the tile)
+  sheet.getRange(startRow, leftCol, 1, totalCols).merge().setValue(tileConfig.title)
     .setFontSize(14)
     .setFontColor(DASHBOARD_COLORS.subText)
     .setVerticalAlignment("middle")
     .setHorizontalAlignment("left");
 
   // Set the main value and subtitle using visual columns
-  // Main value in the first visual column
-  sheet.getRange(startRow + 1, leftCol, 1, firstColCount).merge()
+  // Main value in the first visual column (always same columns for all tiles)
+  sheet.getRange(startRow + 1, firstCols[0], 1, firstCols.length).merge()
     .setValue(tileConfig.value)
     .setFontSize(36)
     .setFontWeight("bold")
     .setFontColor(DASHBOARD_COLORS.headerText)
     .setVerticalAlignment("middle")
     .setHorizontalAlignment("left");
-  // Subtitle in the second visual column (if needed), always left-aligned
+  // Subtitle in the second visual column (always same columns for all tiles), left-aligned
   if (tileConfig.title === "Average Rating" || tileConfig.title === "5-Star Ratings") {
-    sheet.getRange(startRow + 1, leftCol + firstColCount, 1, secondColCount).merge()
+    sheet.getRange(startRow + 1, secondCols[0], 1, secondCols.length).merge()
       .setValue(tileConfig.subtitle)
       .setFontSize(12)
       .setFontColor(DASHBOARD_COLORS.subText)
       .setVerticalAlignment("middle")
       .setHorizontalAlignment("left");
   } else {
-    sheet.getRange(startRow + 1, leftCol + firstColCount, 1, secondColCount).merge().setValue("");
+    sheet.getRange(startRow + 1, secondCols[0], 1, secondCols.length).merge().setValue("");
   }
 
-  // Set the change indicator (merged across all columns in the band)
-  const changeCell = sheet.getRange(startRow + 2, leftCol, 1, bandCols.length).merge();
+  // Set the change indicator (merged across all columns in the tile)
+  const changeCell = sheet.getRange(startRow + 2, leftCol, 1, totalCols).merge();
   changeCell.setValue(formatChangeIndicatorText(tileConfig.change, tileConfig.subtitle, tileConfig.title))
     .setFontSize(12)
     .setFontColor(getChangeColor(tileConfig.change, tileConfig.title))
@@ -286,7 +274,7 @@ function createSimpleKPITile(sheet, startRow, tileConfig) {
 
   // Apply yellow highlight bar for Average Rating only
   if (tileConfig.title === "Average Rating") {
-    sheet.getRange(startRow + 1, leftCol, 1, bandCols.length).setBackground(DASHBOARD_COLORS.warning);
+    sheet.getRange(startRow + 1, leftCol, 1, totalCols).setBackground(DASHBOARD_COLORS.warning);
   }
 }
 

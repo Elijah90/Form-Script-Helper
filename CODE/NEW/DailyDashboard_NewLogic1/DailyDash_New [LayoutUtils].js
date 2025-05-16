@@ -41,13 +41,17 @@ const DASHBOARD_LAYOUT = {
  */
 const DASHBOARD_GRID = {
   bands: [
-    { name: 'band1', columns: [1, 2, 3, 4], widths: [70, 70, 45, 45], color: '#E3F2FD' }, // A, B, C, D
+    { name: 'tile1_first', columns: [1, 2], widths: [110, 110], color: '#E3F2FD' }, // A, B
+    { name: 'tile1_second', columns: [3, 4], widths: [190, 110], color: '#E3F2FD' }, // C, D
     { name: 'spacer1', columns: [5], widths: [30], color: '#B3E5FC' }, // E
-    { name: 'band2', columns: [6, 7, 8, 9], widths: [60, 60, 55, 55], color: '#FFF9C4' }, // F, G, H, I
+    { name: 'tile2_first', columns: [6, 7], widths: [110, 110], color: '#FFFDE7' }, // F, G
+    { name: 'tile2_second', columns: [8, 9], widths: [190, 110], color: '#FFFDE7' }, // H, I
     { name: 'spacer2', columns: [10], widths: [30], color: '#B3E5FC' }, // J
-    { name: 'band3', columns: [11, 12, 13, 14], widths: [60, 60, 55, 55], color: '#E8F5E9' }, // K, L, M, N
+    { name: 'tile3_first', columns: [11, 12], widths: [110, 110], color: '#E8F5E9' }, // K, L
+    { name: 'tile3_second', columns: [13, 14], widths: [190, 110], color: '#E8F5E9' }, // M, N
     { name: 'spacer3', columns: [15], widths: [30], color: '#B3E5FC' }, // O
-    { name: 'band4', columns: [16, 17, 18, 19], widths: [70, 70, 45, 45], color: '#FFEBEE' } // P, Q, R, S
+    { name: 'tile4_first', columns: [16, 17], widths: [110, 110], color: '#FFEBEE' }, // P, Q
+    { name: 'tile4_second', columns: [18, 19], widths: [190, 110], color: '#FFEBEE' } // R, S
   ],
   controls: { columns: [21, 22], widths: [175, 175], color: '#F3E5F5' } // U, V
 };
