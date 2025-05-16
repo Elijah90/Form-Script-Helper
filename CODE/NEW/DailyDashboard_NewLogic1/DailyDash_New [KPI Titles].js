@@ -222,14 +222,17 @@ function createSimpleKPITile(sheet, startRow, tileConfig) {
   const firstColPx = Math.round(tileMaxWidth * 0.38);
   const secondColPx = tileMaxWidth - firstColPx;
 
-  // Find how many columns to merge for each visual column
+  // Find how many columns to merge for each visual column, as close as possible to the target px
   let acc = 0, firstColCount = 0;
   for (let i = 0; i < bandWidths.length; i++) {
-    acc += bandWidths[i];
-    if (acc < firstColPx) firstColCount++;
-    else break;
+    if (acc + bandWidths[i] <= firstColPx || firstColCount === 0) {
+      acc += bandWidths[i];
+      firstColCount++;
+    } else {
+      break;
+    }
   }
-  if (firstColCount === 0) firstColCount = 1;
+  if (firstColCount >= bandCols.length) firstColCount = bandCols.length - 1;
   let secondColCount = bandCols.length - firstColCount;
   if (secondColCount === 0) secondColCount = 1;
 
@@ -255,7 +258,7 @@ function createSimpleKPITile(sheet, startRow, tileConfig) {
     .setFontColor(DASHBOARD_COLORS.headerText)
     .setVerticalAlignment("middle")
     .setHorizontalAlignment("left");
-  // Subtitle in the second visual column (if needed)
+  // Subtitle in the second visual column (if needed), always left-aligned
   if (tileConfig.title === "Average Rating" || tileConfig.title === "5-Star Ratings") {
     sheet.getRange(startRow + 1, leftCol + firstColCount, 1, secondColCount).merge()
       .setValue(tileConfig.subtitle)
