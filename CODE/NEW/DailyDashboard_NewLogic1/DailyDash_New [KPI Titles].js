@@ -9,6 +9,7 @@ function createKPITiles(startRow) {
   // Get the DailyDash sheet
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName('DailyDash');
+  enforceDashboardColumnWidths(sheet);
   
   Logger.log("DEBUG: Starting createKPITiles function");
   
@@ -237,6 +238,7 @@ function createSimpleKPITile(sheet, startRow, tileConfig) {
  * @param {number} startRow - The starting row
  */
 function createEmptyKPITiles(sheet, startRow) {
+  enforceDashboardColumnWidths(sheet);
   // Clear the KPI area and set up layout for 3-row KPIs
   clearSectionArea(sheet, startRow, 3, 15); 
   setDashboardColumnWidths(sheet);

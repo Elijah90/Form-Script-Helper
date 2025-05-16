@@ -694,3 +694,21 @@ function testLayoutUtils() {
   
   Logger.log("Layout utilities test completed");
 }
+
+/**
+ * Enforces the column widths for all bands and spacers in the dashboard grid.
+ * Call this at the start of KPI and table rendering to ensure column widths are always correct.
+ * @param {Sheet} sheet - The Google Sheet to format
+ */
+function enforceDashboardColumnWidths(sheet) {
+  DASHBOARD_GRID.bands.forEach(band => {
+    band.columns.forEach((col, idx) => {
+      sheet.setColumnWidth(col, band.widths[idx]);
+    });
+  });
+  if (DASHBOARD_GRID.controls && DASHBOARD_GRID.controls.columns) {
+    DASHBOARD_GRID.controls.columns.forEach((col, idx) => {
+      sheet.setColumnWidth(col, DASHBOARD_GRID.controls.widths[idx]);
+    });
+  }
+}
