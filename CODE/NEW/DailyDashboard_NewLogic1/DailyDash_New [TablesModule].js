@@ -79,35 +79,30 @@ function createRepPerformanceTable(startRow) {
  * @param {number} row - Row for headers
  */
 function createPerformanceTableHeaders(sheet, row) {
-  // Use the DASHBOARD_GRID config for band and spacer structure
-  // Merge headers across bands and spacers as needed for text length and alignment
-  const bands = DASHBOARD_GRID.bands;
-  // Example: merge Sales Rep across band1 and spacer1, Performance Metrics across band2 and spacer2, etc.
-  // Adjust as needed for your actual header text and layout
-  // This example assumes 4 main headers, each spanning a band and its following spacer (except the last)
-
-  // Set header row height
+  // Two-row header: first row = 4 wide merged headers, second row = subheaders for each data column
+  // Row 1: A-C (Rep Name), D-F (Performance Metrics), G-I (Milestone Progress), J-L (Rewards & Negatives)
   sheet.setRowHeight(row, 30);
-
-  // Clear previous header area (A-L)
-  sheet.getRange(row, 1, 1, 12).clearContent().setBackground(DASHBOARD_COLORS.background);
-
-  // Sales Rep: A-C (band1 + spacer1)
-  sheet.getRange(row, 1, 1, 3).merge().setValue("Sales Rep").setBackground("#f1f3f4");
-  // Performance Metrics: D-F (band2 + spacer2)
+  sheet.getRange(row, 1, 1, 3).merge().setValue("Rep Name").setBackground("#f1f3f4");
   sheet.getRange(row, 4, 1, 3).merge().setValue("Performance Metrics").setBackground("#f1f3f4");
-  // Milestone Progress: G-I (band3 + spacer3)
   sheet.getRange(row, 7, 1, 3).merge().setValue("Milestone Progress").setBackground("#f1f3f4");
-  // Rewards & Negatives: J-L (band4)
   sheet.getRange(row, 10, 1, 3).merge().setValue("Rewards & Negatives").setBackground("#f1f3f4");
-
-  // Apply consistent formatting
-  sheet.getRange(row, 1, 1, 12)
-       .setFontSize(12)
-       .setFontWeight("bold")
-       .setFontColor(DASHBOARD_COLORS.headerText)
-       .setVerticalAlignment("middle")
-       .setHorizontalAlignment("center");
+  sheet.getRange(row, 1, 1, 12).setFontSize(12).setFontWeight("bold").setFontColor(DASHBOARD_COLORS.headerText).setVerticalAlignment("middle").setHorizontalAlignment("center");
+  // Row 2: subheaders
+  const subRow = row + 1;
+  sheet.setRowHeight(subRow, 24);
+  sheet.getRange(subRow, 1).setValue("Rep Name");
+  sheet.getRange(subRow, 2).setValue(""); // merged with 1
+  sheet.getRange(subRow, 3).setValue(""); // merged with 1
+  sheet.getRange(subRow, 4).setValue("Responses");
+  sheet.getRange(subRow, 5).setValue("Rating");
+  sheet.getRange(subRow, 6).setValue("5★ Today");
+  sheet.getRange(subRow, 7).setValue("5★ Total");
+  sheet.getRange(subRow, 8).setValue("Milestone Progress");
+  sheet.getRange(subRow, 9).setValue(""); // merged with 8
+  sheet.getRange(subRow, 10).setValue("Reward Due");
+  sheet.getRange(subRow, 11).setValue("Negatives");
+  sheet.getRange(subRow, 12).setValue(""); // merged with 10
+  sheet.getRange(subRow, 1, 1, 12).setFontSize(11).setFontWeight("normal").setFontColor(DASHBOARD_COLORS.headerText).setVerticalAlignment("middle").setHorizontalAlignment("center");
 }
 
 /**
@@ -132,18 +127,18 @@ function createPerformanceDataRows(sheet, startRow, repData) {
          .setBackground(backgroundColor)
          .setBorder(true, true, true, true, false, false, "#e0e0e0", SpreadsheetApp.BorderStyle.SOLID);
     sheet.setRowHeight(currentRow, 40);
-    // Sales Rep: A-C
+    // Data columns: Rep Name, Responses, Rating, 5★ Today, 5★ Total, Milestone Progress, Reward Due, Negatives
     sheet.getRange(currentRow, 1, 1, 3).merge().setValue(rep.repName).setHorizontalAlignment("left");
-    // Performance Metrics: D-F
-    const metricsText = `Responses: ${rep.totalResponses}\nAvg Rating: ${rep.avgRating.toFixed(1)}\n5★: ${rep.fiveStarsToday} / ${rep.fiveStarsTotal}`;
-    sheet.getRange(currentRow, 4, 1, 3).merge().setValue(metricsText).setHorizontalAlignment("center").setVerticalAlignment("middle");
-    // Milestone Progress: G-I
-    createMilestoneProgressBar(sheet, currentRow, 7, rep.milestoneProgress, rep.performanceLevel);
-    // Rewards & Negatives: J-L
-    const rewardText = rep.rewardDue > 0 ? `£${rep.rewardDue} (earned)` : "-";
-    const combinedText = `Rewards: ${rewardText}\nNegatives: ${rep.negatives}`;
-    sheet.getRange(currentRow, 10, 1, 3).merge().setValue(combinedText).setHorizontalAlignment("center");
-    // Apply consistent formatting
+    sheet.getRange(currentRow, 4).setValue(rep.totalResponses);
+    sheet.getRange(currentRow, 5).setValue(rep.avgRating.toFixed(1));
+    sheet.getRange(currentRow, 6).setValue(rep.fiveStarsToday);
+    sheet.getRange(currentRow, 7).setValue(rep.fiveStarsTotal);
+    // Milestone Progress: merge H-I (8-9)
+    sheet.getRange(currentRow, 8, 1, 2).merge().setValue(rep.milestoneProgress.progressText).setHorizontalAlignment("center");
+    sheet.getRange(currentRow, 10).setValue(rep.rewardDue > 0 ? `£${rep.rewardDue} (earned)` : "-");
+    sheet.getRange(currentRow, 11).setValue(rep.negatives);
+    // Rewards & Negatives: merge K-L (11-12) for future extensibility, but fill only K for now
+    sheet.getRange(currentRow, 11, 1, 2).merge();
     sheet.getRange(currentRow, 1, 1, 12).setFontSize(12).setVerticalAlignment("middle");
   });
 }
