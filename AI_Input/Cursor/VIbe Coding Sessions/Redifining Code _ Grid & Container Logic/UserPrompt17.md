@@ -1,0 +1,3 @@
+oups another fail. 
+Please see attached (DailyDash1_@_GridLayoutImplementationFAIL4TableRep(3)+KPIMaxWidthBlockerNotRespected.png) and let's focus on the fact that our KPI grid container did not have a block on their max width. We didnt have issues with the KPI since 🥲 . Please make correct it so it display proper and make sure it wont have issue in the future. 
+Even the spacer too, the now new spacer should have a set width. I feel like those were hard code and when we added columns to the band width for the already set google sheet columns prevailed over the width of the bands and spacers

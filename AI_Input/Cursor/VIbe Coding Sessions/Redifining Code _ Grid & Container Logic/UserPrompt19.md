@@ -1,0 +1,6 @@
+still the same issue although what you said about occupying only one column was resolved. I think it now has 1 google sheet column for the first visual column (remember when I say 'visual' it means it might be merge or not as opposed to google sheet which is native or without comprising merge) within a tile while the second visual column has 3 google sheet columns. I realized their is not width similarity between each tiles' first and second visual column width as well as the max width not respected . Let me max width for a container 300 and the first column visual width to be 
+Implement this visula column thing so that code dont cunfuise visual column and actual column when we might add actual columns to band or container in the future.
+I also notice an unexpected error. 'Action needed' mesage is now also added in cell below 'vs. yesterday' 
+The dashboard as of now is attached screenshot : 'DailyDash1_@_GridLayoutImplementationFAIL4TableRep(5)+KPIMaxWidthBlockerStillHasIssue+CellsCommentIssue4LastTile.png'
+
+BE THOROUGH FIND THE SDOURCES OF ERRORS AND CORRECT ALL OF THAT

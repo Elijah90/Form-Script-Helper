@@ -1,0 +1,2 @@
+I ran the 'testContainerSystem' function and got what is in the screenshot of dashboard currently. What is happening? Should I be concerned or this is expected?
+Although when Im satisfied that clear all and refresh it coomes back to the latest state where we have a couple issues in the table and its table columns headers and data display (also attached as a remainder of were we are coming from)

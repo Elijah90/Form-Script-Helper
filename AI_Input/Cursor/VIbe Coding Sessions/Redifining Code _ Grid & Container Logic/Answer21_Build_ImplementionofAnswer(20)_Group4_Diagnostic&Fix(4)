@@ -1,0 +1,18 @@
+
+
+**Your KPI tiles will now:**
+- Always have the main value and subtitle in consistent, proportional "visual columns" (38%/62% of the tile width, as close as possible).
+- Subtitle is always left-aligned in the second visual column.
+- The change indicator is a single merged cell across the tile width, and for "% Negative Cases" the subtitle is a cell note only.
+- All tiles will have the same max width and visual structure, regardless of the number of Google Sheet columns in the band.
+
+---
+
+### **What to do next:**
+- Refresh your dashboard or run the KPI test.
+- You should see all tiles with consistent value/subtitle placement and width, and the "Action needed" message only as a cell note.
+
+---
+
+**Let me know if this finally matches your visual requirements!  
+If you want to further tweak the proportions or max width, just say so!**

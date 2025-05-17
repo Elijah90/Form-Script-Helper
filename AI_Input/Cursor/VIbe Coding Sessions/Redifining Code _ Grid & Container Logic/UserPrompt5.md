@@ -1,0 +1,1 @@
+Okay this is goodf thanks, I realize using the 'testVisualizeGrid' that the band we didnt include the scaper column to separate the tiles or is it and I shouldnt worry? If it's not included (and it is the right time aka not plan in another group), please provide me with the teak that would include that thanks
