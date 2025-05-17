@@ -158,21 +158,21 @@ function createKPITiles(startRow) {
         value: todayAvgRating.toFixed(1),
         change: avgRatingChange,
         subtitle: "(out of 5.0)",
-        column: 6  // Column F
+        column: 4  // Column D
       },
       {
         title: "5-Star Ratings",
         value: todayFiveStars,
         change: fiveStarChange,
         subtitle: fiveStarPercentage + "% of total",
-        column: 11  // Column K
+        column: 7  // Column G
       },
       {
         title: "% Negative Cases",
         value: todayNegativePercentage + "%",
         change: negativePercentageChange,
         subtitle: "Action needed: " + todayNegatives + " cases",
-        column: 16  // Column P
+        column: 10  // Column J
       }
     ];
     
@@ -212,16 +212,15 @@ function createSimpleKPITile(sheet, startRow, tileConfig) {
     { first: 'tile3_first', second: 'tile3_second' },
     { first: 'tile4_first', second: 'tile4_second' }
   ];
-  const tileIndex = [1, 6, 11, 16].indexOf(tileConfig.column);
+  const tileIndex = [1, 4, 7, 10].indexOf(tileConfig.column);
   const bands = bandMap[tileIndex];
   if (!bands) throw new Error('Invalid tile column for band mapping');
 
-  // Get columns for first and second visual columns
-  const firstCols = DASHBOARD_GRID.bands.find(b => b.name === bands.first).columns;
-  const secondCols = DASHBOARD_GRID.bands.find(b => b.name === bands.second).columns;
-  const allCols = firstCols.concat(secondCols);
-  const leftCol = allCols[0];
-  const totalCols = allCols.length;
+  // Get columns for first and second visual columns (now single columns)
+  const firstCol = DASHBOARD_GRID.bands.find(b => b.name === bands.first).columns[0];
+  const secondCol = DASHBOARD_GRID.bands.find(b => b.name === bands.second).columns[0];
+  const leftCol = firstCol;
+  const totalCols = 2; // Always two columns per tile
 
   // Create the container for this KPI tile (3 rows, full tile width)
   const container = createContainer(sheet, startRow, [bands.first, bands.second], 3, {
@@ -229,35 +228,33 @@ function createSimpleKPITile(sheet, startRow, tileConfig) {
     border: true
   });
 
-  // Set the title (merged across all columns in the tile)
+  // Set the title (merged across both columns in the tile)
   sheet.getRange(startRow, leftCol, 1, totalCols).merge().setValue(tileConfig.title)
     .setFontSize(14)
     .setFontColor(DASHBOARD_COLORS.subText)
     .setVerticalAlignment("middle")
     .setHorizontalAlignment("left");
 
-  // Set the main value and subtitle using visual columns
-  // Main value in the first visual column (always same columns for all tiles)
-  sheet.getRange(startRow + 1, firstCols[0], 1, firstCols.length).merge()
-    .setValue(tileConfig.value)
+  // Set the main value in the first visual column (single column)
+  sheet.getRange(startRow + 1, firstCol).setValue(tileConfig.value)
     .setFontSize(36)
     .setFontWeight("bold")
     .setFontColor(DASHBOARD_COLORS.headerText)
     .setVerticalAlignment("middle")
     .setHorizontalAlignment("left");
-  // Subtitle in the second visual column (always same columns for all tiles), left-aligned
+
+  // Subtitle in the second visual column (single column), left-aligned
   if (tileConfig.title === "Average Rating" || tileConfig.title === "5-Star Ratings") {
-    sheet.getRange(startRow + 1, secondCols[0], 1, secondCols.length).merge()
-      .setValue(tileConfig.subtitle)
+    sheet.getRange(startRow + 1, secondCol).setValue(tileConfig.subtitle)
       .setFontSize(12)
       .setFontColor(DASHBOARD_COLORS.subText)
       .setVerticalAlignment("middle")
       .setHorizontalAlignment("left");
   } else {
-    sheet.getRange(startRow + 1, secondCols[0], 1, secondCols.length).merge().setValue("");
+    sheet.getRange(startRow + 1, secondCol).setValue("");
   }
 
-  // Set the change indicator (merged across all columns in the tile)
+  // Set the change indicator (merged across both columns in the tile)
   const changeCell = sheet.getRange(startRow + 2, leftCol, 1, totalCols).merge();
   changeCell.setValue(formatChangeIndicatorText(tileConfig.change, tileConfig.subtitle, tileConfig.title))
     .setFontSize(12)
@@ -325,21 +322,21 @@ function createEmptyKPITiles(sheet, startRow) {
       value: "0.0",
       change: 0,
       subtitle: "(out of 5.0)",
-      column: 6  // Column F
+      column: 4  // Column D
     },
     {
       title: "5-Star Ratings",
       value: 0,
       change: 0,
       subtitle: "0% of total",
-      column: 11  // Column K
+      column: 7  // Column G
     },
     {
       title: "% Negative Cases",
       value: "0%",
       change: 0,
       subtitle: "Action needed: 0 cases",
-      column: 16  // Column P
+      column: 10  // Column J
     }
   ];
   

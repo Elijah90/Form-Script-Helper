@@ -26,13 +26,11 @@ const DASHBOARD_COLORS = {
  */
 const DASHBOARD_LAYOUT = {
   tileMaxWidth: 230,           // Max width for KPI tiles
-  tileFirstCellPercent: 0.38,  // 38% of tile width
-  tileSecondCellPercent: 0.62, // 62% of tile width
+  tileFirstCellPercent: 0.48,  // 48% of tile width
+  tileSecondCellPercent: 0.52, // 52% of tile width
   spacerWidth: 30,             // Width between tiles
-  
-  // Use the original working widths instead of calculated values
-  tileFirstCellWidth: 110,     // Original working width
-  tileSecondCellWidth: 120     // Original working width
+  tileFirstCellWidth: 110,     // Standardized width
+  tileSecondCellWidth: 120     // Standardized width
 };
 
 /**
@@ -41,19 +39,19 @@ const DASHBOARD_LAYOUT = {
  */
 const DASHBOARD_GRID = {
   bands: [
-    { name: 'tile1_first', columns: [1, 2], widths: [110, 110], color: '#E3F2FD' }, // A, B
-    { name: 'tile1_second', columns: [3, 4], widths: [190, 110], color: '#E3F2FD' }, // C, D
-    { name: 'spacer1', columns: [5], widths: [30], color: '#B3E5FC' }, // E
-    { name: 'tile2_first', columns: [6, 7], widths: [110, 110], color: '#FFFDE7' }, // F, G
-    { name: 'tile2_second', columns: [8, 9], widths: [190, 110], color: '#FFFDE7' }, // H, I
-    { name: 'spacer2', columns: [10], widths: [30], color: '#B3E5FC' }, // J
-    { name: 'tile3_first', columns: [11, 12], widths: [110, 110], color: '#E8F5E9' }, // K, L
-    { name: 'tile3_second', columns: [13, 14], widths: [190, 110], color: '#E8F5E9' }, // M, N
-    { name: 'spacer3', columns: [15], widths: [30], color: '#B3E5FC' }, // O
-    { name: 'tile4_first', columns: [16, 17], widths: [110, 110], color: '#FFEBEE' }, // P, Q
-    { name: 'tile4_second', columns: [18, 19], widths: [190, 110], color: '#FFEBEE' } // R, S
+    { name: 'tile1_first', columns: [1], widths: [110], color: '#E3F2FD' }, // A
+    { name: 'tile1_second', columns: [2], widths: [120], color: '#E3F2FD' }, // B
+    { name: 'spacer1', columns: [3], widths: [30], color: '#B3E5FC' }, // C
+    { name: 'tile2_first', columns: [4], widths: [110], color: '#FFFDE7' }, // D
+    { name: 'tile2_second', columns: [5], widths: [120], color: '#FFFDE7' }, // E
+    { name: 'spacer2', columns: [6], widths: [30], color: '#B3E5FC' }, // F
+    { name: 'tile3_first', columns: [7], widths: [110], color: '#E8F5E9' }, // G
+    { name: 'tile3_second', columns: [8], widths: [120], color: '#E8F5E9' }, // H
+    { name: 'spacer3', columns: [9], widths: [30], color: '#B3E5FC' }, // I
+    { name: 'tile4_first', columns: [10], widths: [110], color: '#FFEBEE' }, // J
+    { name: 'tile4_second', columns: [11], widths: [120], color: '#FFEBEE' } // K
   ],
-  controls: { columns: [21, 22], widths: [175, 175], color: '#F3E5F5' } // U, V
+  controls: { columns: [13, 14], widths: [175, 175], color: '#F3E5F5' } // M, N
 };
 
 /**
