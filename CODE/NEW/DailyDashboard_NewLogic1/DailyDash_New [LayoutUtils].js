@@ -109,39 +109,6 @@ function visualizeDashboardGrid(sheet, startRow = 1, numRows = 10, useKpiColors 
 }
 
 /**
- * Sets up the flexible dashboard column widths
- * @param {Sheet} sheet - The Google Sheet to format
- */
-function setDashboardColumnWidths(sheet) {
-  // Updated column widths for the new KPI tile structure
-  // Total width per tile remains 230px (firstCellWidth + secondCellWidth)
-  const firstCellWidth = 90;   // Reduced from 110px
-  const secondCellWidth = 140; // Increased from 120px
-  const spacerWidth = DASHBOARD_LAYOUT.spacerWidth; // 30px
-  
-  // Update DASHBOARD_LAYOUT constants for reference elsewhere
-  DASHBOARD_LAYOUT.tileFirstCellWidth = firstCellWidth;
-  DASHBOARD_LAYOUT.tileSecondCellWidth = secondCellWidth;
-  
-  // Set column widths for KPI tiles with consistent spacing
-  sheet.setColumnWidth(1, firstCellWidth);   // A - KPI 1 first cell
-  sheet.setColumnWidth(2, secondCellWidth);  // B - KPI 1 second cell
-  sheet.setColumnWidth(3, spacerWidth);      // C - Spacer
-  sheet.setColumnWidth(4, firstCellWidth);   // D - KPI 2 first cell
-  sheet.setColumnWidth(5, secondCellWidth);  // E - KPI 2 second cell
-  sheet.setColumnWidth(6, spacerWidth);      // F - Spacer
-  sheet.setColumnWidth(7, firstCellWidth);   // G - KPI 3 first cell
-  sheet.setColumnWidth(8, secondCellWidth);  // H - KPI 3 second cell
-  sheet.setColumnWidth(9, spacerWidth);      // I - Spacer
-  sheet.setColumnWidth(10, firstCellWidth);  // J - KPI 4 first cell
-  sheet.setColumnWidth(11, secondCellWidth); // K - KPI 4 second cell
-  
-  // Other columns for later sections
-  sheet.setColumnWidth(15, 175); // O - Dashboard controls
-  sheet.setColumnWidth(16, 175); // P - Dashboard controls
-}
-
-/**
  * Gets the column positions for KPI tiles based on flexible layout
  * @return {Object} Object containing arrays for left and right columns of each KPI tile
  */
@@ -211,13 +178,6 @@ function formatSectionHeader(headerRange, title) {
              .setVerticalAlignment("middle");
 }
 
-/**
- * Creates a title for a KPI tile
- * @param {Sheet} sheet - The Google Sheet
- * @param {number} row - The row for the title
- * @param {number} column - The column for the title
- * @param {string} title - The title text
- */
 /**
  * Formats a KPI tile title
  * @param {Sheet} sheet - The dashboard sheet
@@ -666,7 +626,7 @@ function testLayoutUtils() {
   const sheet = ss.getSheetByName('DailyDash');
   
   // Test column widths
-  setDashboardColumnWidths(sheet);
+  enforceDashboardColumnWidths(sheet);
   
   // Test KPI formatting
   const startRow = 4;
