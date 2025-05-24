@@ -59,9 +59,14 @@ function buildDashboard(dataMode = false) {
 /**
  * Menu creation for easy access
  */
-function onOpen() {
-  const ui = SpreadsheetApp.getUi();
-  
+function onOpen(e) {
+  let ui;
+  try {
+    ui = SpreadsheetApp.getUi();
+  } catch (err) {
+    Logger.log('UI not available, skipping menu creation: ' + err);
+    return;
+  }
   ui.createMenu('CASAMANCE Dashboard')
     .addItem('Build Dashboard (Sample Data)', 'buildDashboardWithSampleData')
     .addItem('Build Dashboard (Real Data)', 'buildDashboardWithRealData')
