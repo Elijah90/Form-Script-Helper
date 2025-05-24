@@ -18,18 +18,25 @@ function createHeader(sheet, startRow = 1) {
   // Clear the header area
   clearArea(sheet, startRow, 2, headerBands.startColumn, headerBands.columnCount);
   
-  // Create header container with white background and border
-  const headerContainer = sheet.getRange(startRow, headerBands.startColumn, 2, headerBands.columnCount);
-  headerContainer
+  // Title container: white background and border, full width
+  const titleContainer = sheet.getRange(startRow, headerBands.startColumn, 1, headerBands.columnCount);
+  titleContainer
     .setBackground(DASHBOARD_CONFIG.elementBackground)
-    .setBorder(true, true, true, true, false, false, 
-               DASHBOARD_CONFIG.tileBorder, 
+    .setBorder(true, true, false, true, false, false,
+               DASHBOARD_CONFIG.tileBorder,
                SpreadsheetApp.BorderStyle.SOLID);
-  
+
   // Create the main title
   createTitle(sheet, startRow, headerBands);
   
-  // Create the date/time subtitle
+  // Subtitle container: white background and border, span columns A-E only
+  const subtitleContainer = sheet.getRange(startRow + 1, headerBands.startColumn, 1, 5);
+  subtitleContainer
+    .setBackground(DASHBOARD_CONFIG.elementBackground)
+    .setBorder(true, true, true, true, false, false,
+               DASHBOARD_CONFIG.tileBorder,
+               SpreadsheetApp.BorderStyle.SOLID);
+  // Create the date/time subtitle within its container
   createDateSubtitle(sheet, startRow + 1, headerBands);
   
   // Add spacing row (dashboard background color)
@@ -78,8 +85,8 @@ function createDateSubtitle(sheet, row, bands) {
   // Set row height
   sheet.setRowHeight(row, 25);
   
-  // Merge cells for the subtitle
-  const subtitleRange = sheet.getRange(row, bands.startColumn, 1, bands.columnCount);
+  // Merge cells for the subtitle only across columns A-E
+  const subtitleRange = sheet.getRange(row, bands.startColumn, 1, 5);
   subtitleRange.merge();
   
   // Get current date and time
