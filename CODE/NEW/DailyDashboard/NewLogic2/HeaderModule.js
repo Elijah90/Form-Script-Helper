@@ -22,7 +22,7 @@ function createHeader(sheet, startRow = 1) {
   const titleContainer = sheet.getRange(startRow, headerBands.startColumn, 1, headerBands.columnCount);
   titleContainer
     .setBackground(DASHBOARD_CONFIG.elementBackground)
-    .setBorder(true, true, false, true, false, false,
+    .setBorder(true, true, true, true, false, false,
                DASHBOARD_CONFIG.tileBorder,
                SpreadsheetApp.BorderStyle.SOLID);
 
