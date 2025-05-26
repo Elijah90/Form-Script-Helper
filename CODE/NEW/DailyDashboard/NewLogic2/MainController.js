@@ -75,6 +75,7 @@ function onOpen(e) {
       .addItem('Test Grid Setup', 'testGridSetup')
       .addItem('Test Header Only', 'testHeader')
       .addItem('Test Containers', 'testContainers')
+      .addItem('Test KPIs Only', 'testKPIsOnly')
       .addItem('Visualize Grid', 'visualizeGridTest'))
     .addSeparator()
     .addItem('Clear Dashboard', 'clearDashboard')
@@ -133,6 +134,31 @@ function visualizeGridTest() {
   SpreadsheetApp.getActiveSpreadsheet().toast(
     "Grid visualization created at row 10 with legend", 
     "Visualization Complete", 
+    3
+  );
+}
+
+/**
+ * Test function to create only KPI tiles
+ */
+function testKPIsOnly() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName('DailyDash');
+
+  if (!sheet) {
+    sheet = ss.insertSheet('DailyDash');
+  }
+
+  // Ensure grid is set up as createKPITiles depends on it
+  setupGrid(sheet);
+  sheet.setHiddenGridlines(true);
+
+  // Start KPI tiles after a few rows, e.g., row 6
+  createKPITiles(sheet, 6, false); // Use sample data for testing
+
+  SpreadsheetApp.getActiveSpreadsheet().toast(
+    "KPI tiles created",
+    "Test Complete",
     3
   );
 }
