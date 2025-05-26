@@ -33,8 +33,8 @@ function buildDashboard(dataMode = false) {
     let currentRow = createHeader(sheet, 1);
     Logger.log(`Header complete. Current row: ${currentRow}`);
     
-    // Step 4: Create KPI tiles (to be implemented)
-    // currentRow = createKPITiles(sheet, currentRow, dataMode);
+    // Step 4: Create KPI tiles
+    currentRow = createKPITiles(sheet, currentRow, dataMode);
     
     // Step 5: Create tables (to be implemented)
     // currentRow = createTables(sheet, currentRow, dataMode);
